@@ -127,7 +127,7 @@ def arc(g, cx, cy, r0, r1, a0, a1, col):
     """Filled ring sector, angles in degrees (0 = right, clockwise)."""
     if _HAS_ARC[0]:
         try:
-            g.fillArc(cx, cy, r0, r1, a0, a1, col)
+            g.fillArc(int(cx), int(cy), int(r0), int(r1), int(a0), int(a1), col)
             return
         except Exception as e:
             print("gfx: fillArc not usable (%r) - using triangles" % e)

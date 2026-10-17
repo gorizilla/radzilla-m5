@@ -19,7 +19,9 @@ it is started by hand from Thonny – nothing is changed on the device
 ## 2. Upload
 
 1. In Thonny: *View → Files*. Upper half = computer, lower half = Core2.
-2. On the Core2 open the folder `/flash`.
+2. The lower half shows the Core2. Thonny often shows the content of
+   `/flash` directly, without the folder name (you see `boot.py`, `main.py`,
+   `libs`) – that is the right place.
 3. On the computer open the project folder `device/`, right-click the
    folder **`radzilla`** → *Upload to /flash*.
 4. On a later update upload the folder again (overwrite).

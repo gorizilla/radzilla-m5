@@ -40,12 +40,12 @@ class Device:
         M5.begin()
         Lcd.setTextSize(1)              # reset leftovers from other programs
         self.lcd = Lcd
+        self.sd_mounted = self._mount_sd()     # before the canvas (shared SPI bus)
         self.canvas = None
         try:
             self.canvas = Lcd.newCanvas(self.W, self.H, 16)
         except Exception as e:
             print("core2: no canvas (%r), drawing directly" % e)
-        self.sd_mounted = self._mount_sd()
         self._vol = None
         # touch gesture state
         self._down = None               # (t, x, y) at touch start
@@ -134,6 +134,12 @@ class Device:
                     return True
             except OSError:
                 pass
+        try:                            # plain MicroPython driver as fallback
+            import machine
+            os.mount(machine.SDCard(slot=2, sck=18, miso=38, mosi=23, cs=4), "/sd")
+            return True
+        except Exception as e:
+            print("core2: SD fallback: %r" % e)
         print("core2: no microSD card - logging to flash")
         return False
 
