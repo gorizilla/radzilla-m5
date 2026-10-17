@@ -1,5 +1,10 @@
 # Changelog
 
+## next
+
+- Status bar: radiation symbol and "RC 100%" 16 px further left (touched the
+  battery icon at 100 %), device battery icon 4 px further right.
+
 ## v2.0.0-dev6 – 2026-10-17 (in development)
 
 - Fix: with dev5 the battery always showed the green bolt – the USB voltage

@@ -21,6 +21,8 @@ W, H = 320, 240
 TABS = ("RATE", "CPS", "DOSE", "SET")
 TAB_X, TAB_STEP, TAB_W, TAB_Y, TAB_H = 8, 56, 52, 29, 20
 GAUGE_CX, GAUGE_CY = 82, 131
+RC_X = 136                              # "RC 100%" (status bar), symbol left of it
+BAT_X = 238                             # device battery icon; percentage right-aligned at 312
 DOSE_CX = 160
 SMALL = dict(w=16, h=34, t=5, gap=4, ndig=3, dots=False)
 BIG_RIGHT = 286                         # big value right edge, trend arrow behind it
@@ -50,9 +52,9 @@ def _clear(g, x, y, w, h=14):
 
 # ---------- static parts (drawn once per page) ---------------------------------------
 def _static_chrome(g, v):
-    gfx.trefoil(g, 140, 12, 7, YELLOW)
-    g.drawRect(234, 5, 23, 14, GREY)                    # device battery outline
-    g.fillRect(257, 9, 2, 6, GREY)
+    gfx.trefoil(g, RC_X - 12, 12, 7, YELLOW)
+    g.drawRect(BAT_X, 5, 23, 14, GREY)                  # device battery outline
+    g.fillRect(BAT_X + 23, 9, 2, 6, GREY)
     g.drawLine(0, 24, W, 24, DARK)
     for i, t in enumerate(TABS):
         x = TAB_X + i * TAB_STEP
@@ -128,17 +130,18 @@ def _dyn_chrome(g, v):
         _clear(g, 8, 5, 60)
         gfx.text(g, v.time_str, 8, 5, WHITE)
     if _changed("rc", v.rc_txt):
-        _clear(g, 152, 5, 80)
-        gfx.text(g, v.rc_txt, 152, 5, GREY)
+        _clear(g, RC_X, 5, BAT_X - 4 - RC_X)
+        gfx.text(g, v.rc_txt, RC_X, 5, GREY)
     if _changed("batt", (v.batt_txt, v.batt_mode, v.batt_col)):
-        g.fillRect(236, 7, 19, 10, BG)
-        _clear(g, 262, 5, 50)
+        b = BAT_X
+        g.fillRect(b + 2, 7, 19, 10, BG)
+        _clear(g, b + 27, 5, 312 - b - 27)
         if v.batt_mode in ("chg", "full"):              # cable: lightning bolt
             col = YELLOW if v.batt_mode == "chg" else GREEN
-            g.fillTriangle(247, 7, 239, 12, 246, 12, col)
-            g.fillTriangle(244, 11, 251, 11, 243, 16, col)
+            g.fillTriangle(b + 13, 7, b + 5, 12, b + 12, 12, col)
+            g.fillTriangle(b + 10, 11, b + 17, 11, b + 9, 16, col)
         elif v.batt_pct is not None:
-            g.fillRect(236, 7, max(1, min(19, int(19 * v.batt_pct / 100 + 0.5))), 10, v.batt_col)
+            g.fillRect(b + 2, 7, max(1, min(19, int(19 * v.batt_pct / 100 + 0.5))), 10, v.batt_col)
         gfx.text(g, v.batt_txt, 312, 5, GREY, align="right")
     if _changed("state", (v.state_txt, v.state_col)):
         _clear(g, 230, TAB_Y + 3, 82)
