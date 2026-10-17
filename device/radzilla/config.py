@@ -46,10 +46,11 @@ RC_INFO_MS = 2000           # ... for this long
 RC_DOSE_FACTOR = 10000.0    # raw dose rate -> µSv/h (compare with the RadiaCode display!)
 
 # --- Alarm thresholds (µSv/h) --------------------------------------------------
-LEVEL1_USV = 0.28           # HIGH   – about 2x local background
+LEVEL1_USV = 0.37           # HIGH   – = 11 CPS on an RC-102 (30 CPS per µSv/h, Cs-137)
 LEVEL2_USV = 10.0           # DANGER – immediate alarm
 HYSTERESIS = 0.10           # an alarm ends only below threshold x 0.9 (also dose alarm)
-# Alarms need no acknowledgement. Several at once: DANGER > DOSE > HIGH.
+# Alarms use only the dose rate of the RadiaCode (energy-corrected, the same
+# for all models). No acknowledgement. Several at once: DANGER > DOSE > HIGH.
 
 # --- Ring on the RATE / CPS page -------------------------------------------------
 # Shows the dose rate on a logarithmic scale from RING_MIN_USV to RING_MAX_USV.

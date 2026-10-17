@@ -17,6 +17,8 @@
 - Sounds as WAV files in `radzilla/sounds/`, played from RAM with
   `Speaker.playWav()` – `playWavFile()` blocks the program for the whole sound
   (tools/rz_wav_test.py). Generators in `tools/sound_src/`.
+- HIGH threshold 0.37 µSv/h (= 11 CPS on an RC-102); alarms use only the dose
+  rate, independent of the model.
 - **Autostart** with `device/main.py` (boot option 0); hold A while switching
   on to skip.
 
