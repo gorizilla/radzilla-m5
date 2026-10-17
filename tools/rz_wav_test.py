@@ -9,7 +9,8 @@
 #   1 Jingle 60 %      clicks -> all LEDs flash green + 20 ms vibration
 #   2 DOSE siren 100 % LEDs pulse red with the pitch, 300 ms vibration at start + end
 #   3 DANGER siren     3 bursts: red run centre -> ends + 400 ms vibration each
-# Also measures whether Speaker.playWavFile() blocks (important for RadZilla).
+# Run 1 showed: playWavFile() blocks for the whole sound. This version loads the
+# file into RAM and uses Speaker.playWav(), which should play in the background.
 # Copy the summary at the end and tell me what you saw / heard / felt.
 import time
 import machine
@@ -62,11 +63,18 @@ def screen(title, line=""):
     Lcd.setTextSize(1)
 
 
+_buf = [None]          # keep the WAV data alive while it plays
+
+
 def play(name, vol_pct):
-    """Start a WAV file; returns (start ticks, ms the call blocked)."""
+    """Load a WAV file into RAM and start it with Speaker.playWav(), which
+    plays in the background (playWavFile() streams and blocks the program).
+    Returns (start ticks, ms the call blocked)."""
+    with open(SOUNDS + name, "rb") as f:
+        _buf[0] = f.read()
     Speaker.setVolume(int(255 * vol_pct / 100))
     t0 = time.ticks_ms()
-    Speaker.playWavFile(SOUNDS + name)
+    Speaker.playWav(_buf[0])
     return t0, time.ticks_diff(time.ticks_ms(), t0)
 
 
@@ -108,7 +116,7 @@ def test_jingle():
 
     t0, blocked = play("jingle.wav", 60)
     seen = wait_end(t0, JINGLE_MS, step)
-    note(True, "jingle", "playWavFile blocked %d ms, isPlaying seen: %s, clicks %d"
+    note(True, "jingle", "playWav blocked %d ms, isPlaying seen: %s, clicks %d"
          % (blocked, seen, state["i"]))
 
 
@@ -129,7 +137,7 @@ def test_dose():
 
     t0, blocked = play("siren_dose.wav", 100)
     seen = wait_end(t0, DOSE_MS, step)
-    note(True, "dose", "playWavFile blocked %d ms, isPlaying seen: %s" % (blocked, seen))
+    note(True, "dose", "playWav blocked %d ms, isPlaying seen: %s" % (blocked, seen))
 
 
 # ---------- 3 DANGER siren ---------------------------------------------------------------------
@@ -157,7 +165,7 @@ def test_danger():
 
     t0, blocked = play("siren_danger.wav", 100)
     seen = wait_end(t0, DANGER_MS, step)
-    note(True, "danger", "playWavFile blocked %d ms, isPlaying seen: %s" % (blocked, seen))
+    note(True, "danger", "playWav blocked %d ms, isPlaying seen: %s" % (blocked, seen))
 
 
 def main():
