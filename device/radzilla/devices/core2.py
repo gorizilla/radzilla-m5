@@ -135,6 +135,13 @@ class Device:
                     return True
             except OSError:
                 pass
+        try:                            # plain MicroPython driver (as in the hardware
+            import machine              # test: only after the first LCD access!)
+            os.mount(machine.SDCard(slot=2, sck=18, miso=38, mosi=23, cs=4), "/sd")
+            print("core2: SD mounted with machine.SDCard")
+            return True
+        except Exception as e:
+            print("core2: SD fallback: %r" % e)
         print("core2: no microSD card - logging to flash")
         return False
 
