@@ -58,6 +58,13 @@ it is started by hand from Thonny – nothing is changed on the device
 | button B | DOSE page |
 | hold button B (2 s) | Bluetooth to the RadiaCode off / on – while off: no readings, no alarms, no log; always on after a restart |
 
+## Battery empty
+
+On battery, when the level stays below 5 % for 30 s, the display shows
+`AKKU LEER` with a 10 s countdown, the log is saved and the device switches
+itself off – also during an alarm, to protect the battery. Switch it on again
+with the power button (charge first). Settings `BAT_OFF_*` in `config.py`.
+
 ## SET page – WiFi and time
 
 The WiFi is only used for the time sync (PTB atomic clock). After a sync the

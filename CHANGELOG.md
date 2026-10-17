@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.0.0-dev9 – 2026-10-18 (in development)
+
+- Automatic switch-off when the device battery stays below 5 % for 30 s
+  (on battery only, also during an alarm): "AKKU LEER" with a 10 s
+  countdown and vibration, log saved, then `Power.powerOff()`. Switch on
+  again with the power button. Settings `BAT_OFF_*` in config.py.
+
 ## v2.0.0-dev8 – 2026-10-18 (in development)
 
 - Heartbeat run (every 20 s) at 40 % LED brightness (`HEARTBEAT_LEVEL_PCT`);

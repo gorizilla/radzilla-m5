@@ -273,6 +273,42 @@ async def _vibrate(ms):
     DEV.vibrate(0)
 
 
+async def power_task():
+    """Switch the device off when the battery stays below BAT_OFF_PCT for
+    BAT_OFF_HOLD_S (not with the cable; also during an alarm, to protect the
+    battery from deep discharge). Warning with countdown, the log is saved."""
+    low_since = None
+    while True:
+        await asyncio.sleep_ms(1000)
+        pct, mode = DEV.battery()
+        if mode != "bat" or pct is None or pct >= C.BAT_OFF_PCT:
+            low_since = None
+            continue
+        now = time.ticks_ms()
+        if low_since is None:
+            low_since = now
+        if time.ticks_diff(now, low_since) < C.BAT_OFF_HOLD_S * 1000:
+            continue
+        print("Battery empty (%d %%) - switching off" % pct)
+        from radzilla.ui import setup_rect as dlg
+        S.modal = True                       # stops page drawing and taps
+        LIGHT.wake()
+        asyncio.create_task(_vibrate(C.BT_VIB_MS))
+        for n in range(C.BAT_OFF_WARN_S, 0, -1):
+            dlg.message(DEV.gfx(), ["AKKU LEER", "AUS IN %d S" % n], gfx.RED)
+            await asyncio.sleep_ms(1000)
+        t, valid = DEV.now()
+        if C.LOG_ON and valid and S.connected and S.fresh(C.RC_STALE_MS):
+            LOG.add(t, S.usv, S.cps, S.log_alarm(), S.dose_total)
+        LOG.flush()
+        DEV.stop_sound()
+        DEV.vibrate(0)
+        DEV.leds([(0, 0, 0)] * 10)
+        DEV.gfx().fillScreen(0)
+        DEV.power_off()
+        return
+
+
 def toggle_bt():
     """B held: Bluetooth to the RadiaCode off / on (on again after a restart).
     While off there are no readings, no alarms and no log."""
@@ -646,6 +682,7 @@ async def main():
     asyncio.create_task(FX.task())
     asyncio.create_task(alarms.task(FX, S, C))
     asyncio.create_task(sync_task())
+    asyncio.create_task(power_task())
     if C.DIAG:
         asyncio.create_task(diag_task())
     await rc

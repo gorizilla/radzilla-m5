@@ -11,6 +11,7 @@
 #   show()                       finish a frame (no-op when drawing directly)
 #   set_brightness(v)            0..255
 #   battery()                    (percent or None, "bat" / "chg" / "full")
+#   power_off()                  switch the device off
 #   now()                        ((Y, M, D, h, m, s), valid)
 #   set_volume(pct), tone(hz, ms)
 #   vibrate(level)               vibration motor 0..255
@@ -133,6 +134,14 @@ class Device:
         else:
             self._bat_mv += 0.2 * (rest - self._bat_mv)      # smooth
         return _lipo_pct(self._bat_mv), ("chg" if cable else "bat")
+
+    def power_off(self):
+        """Switch the whole device off (power button switches it on again)."""
+        from M5 import Power
+        try:
+            Power.powerOff()
+        except Exception as e:
+            print("core2: powerOff:", repr(e))
 
     def now(self):
         """German local time from the clock (which runs in UTC):

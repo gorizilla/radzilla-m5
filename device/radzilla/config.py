@@ -7,7 +7,7 @@
 # ⚠ Experimental: thresholds and conversion factor are not calibrated –
 #   see NOTICE.md. Not a safety device.
 
-VERSION = "2.0.0-dev8"
+VERSION = "2.0.0-dev9"
 DEVICE = "core2"            # hardware module in devices/ (later also "stopwatch")
 DIAG = False                # True: print a status line to the shell every 5 s
 
@@ -26,6 +26,12 @@ REDRAW_MS = 100             # check for redraws this often
 # green bolt + "100%" when full.
 BAT_CABLE_MA = 20           # battery current above -20 mA = cable connected
 BAT_RINT_MOHM = 250         # internal resistance of the battery (estimate)
+# Automatic switch-off (on battery only, also during an alarm): below
+# BAT_OFF_PCT for BAT_OFF_HOLD_S -> "AKKU LEER" countdown BAT_OFF_WARN_S,
+# log saved, device off. Switch on again with the power button.
+BAT_OFF_PCT = 5             # ~3.50 V
+BAT_OFF_HOLD_S = 30         # ignores short voltage drops (siren, display)
+BAT_OFF_WARN_S = 10
 
 # --- Touch / buttons -----------------------------------------------------------
 # Double tap on the display or swipe = next / previous page,
