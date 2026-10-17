@@ -63,6 +63,7 @@ class Device:
         Lcd.fillScreen(0x000000)        # first LCD access initialises the shared SPI bus
         self.sd_mounted = self._mount_sd()
         self._vol = None
+        self._bat_mv = None
         import machine
         self._led_pin = machine.Pin(25, machine.Pin.OUT)
         try:
@@ -98,9 +99,14 @@ class Device:
 
     # ---------- power / time ----------
     def battery(self):
-        """(percent or None, mode). mode: "bat" on battery, "chg" charging
-        (percent estimated from the voltage minus the charge offset, because
-        the charger lifts the voltage), "full" cable in and charged."""
+        """(percent or None, mode). mode: "bat" on battery, "chg" charging,
+        "full" cable in and charged.
+
+        Measured on the Core2 (UIFlow 2.5.3): the USB voltage reads ~5.1 V
+        also without cable (internal 5 V boost) -> not usable; the battery
+        current is +mA with the cable and -mA on battery. The level is
+        computed from the battery voltage corrected by current x internal
+        resistance (UIFlow's getBatteryLevel() already shows 100 % at 4.12 V)."""
         from M5 import Power
 
         def call(name):
@@ -109,22 +115,24 @@ class Device:
             except Exception:
                 return None
 
-        usb_mv = call("getVBUSVoltage")
-        if usb_mv is not None and 0 < usb_mv < 100:          # some builds return volts
-            usb_mv *= 1000
-        charging = call("isCharging")
-        usb = (usb_mv is not None and usb_mv >= self.c.BAT_USB_MV) or bool(charging)
-        if not usb:
-            pct = call("getBatteryLevel")
-            return (int(pct) if pct is not None else None), "bat"
-        if not charging:
-            return 100, "full"
+        charging = bool(call("isCharging"))
+        ma = call("getBatteryCurrent")
         mv = call("getBatteryVoltage")
+        cable = charging or (ma is not None and ma > -self.c.BAT_CABLE_MA)
+        if cable and not charging:
+            self._bat_mv = None
+            return 100, "full"
         if mv is None:
-            return None, "chg"
-        if mv < 100:
+            pct = call("getBatteryLevel")
+            return (int(pct) if pct is not None else None), ("chg" if cable else "bat")
+        if mv < 100:                                     # volts -> mV
             mv *= 1000
-        return _lipo_pct(mv - self.c.BAT_CHG_COMP_MV), "chg"
+        rest = mv - (ma or 0) * self.c.BAT_RINT_MOHM / 1000   # resting voltage
+        if self._bat_mv is None or abs(rest - self._bat_mv) > 150:
+            self._bat_mv = rest
+        else:
+            self._bat_mv += 0.2 * (rest - self._bat_mv)      # smooth
+        return _lipo_pct(self._bat_mv), ("chg" if cable else "bat")
 
     def now(self):
         """German local time from the clock (which runs in UTC):

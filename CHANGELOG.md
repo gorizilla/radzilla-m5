@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.0.0-dev6 – 2026-10-17 (in development)
+
+- Fix: with dev5 the battery always showed the green bolt – the USB voltage
+  reads ~5.1 V also without cable (internal 5 V boost). The cable is now
+  detected by the charge flag and the battery current (+mA with cable,
+  -mA on battery; tools/rz_batt_test.py).
+- Battery level computed from the voltage corrected by current x internal
+  resistance (`BAT_RINT_MOHM` 250), smoothed; UIFlow's level already shows
+  100 % at 4.12 V. Measured: 4.122 V / -88 mA -> 94 %, charging
+  4.196 V / +115 mA -> "~97%".
+
 ## v2.0.0-dev5 – 2026-10-17 (in development)
 
 - Device battery with the cable: lightning bolt instead of the fill level –
