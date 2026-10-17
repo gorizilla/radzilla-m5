@@ -120,6 +120,7 @@ TREND_MIN_CPS = 1.0
 #   Alarm 0 none, 1 HIGH, 2 DANGER, 3 DOSE (state, DANGER > DOSE > HIGH)
 # Semicolon + decimal comma -> opens directly in German Numbers/Excel.
 LOG_ON = True
+SD_FREQ = 4_000_000          # microSD bus clock (shared with the display)
 LOG_SD_DIR = "/sd/RadZilla/logs"        # microSD (FAT32)
 LOG_INT_DIR = "/flash/RadZilla/logs"    # fallback without SD card
 LOG_INTERVAL_S = 3

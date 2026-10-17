@@ -118,30 +118,23 @@ class Device:
 
     # ---------- microSD ----------
     def _mount_sd(self):
+        """microSD via the UIFlow driver. slot=2 is SPI3 (VSPI) - the bus of
+        the display - and is shared with it. Never use slot=3 (second bus on
+        the same pins, takes the lines away from the display). The message
+        "[Errno 22] EINVAL" printed by the driver is harmless."""
         try:
             if "sd" in os.listdir("/"):
                 return True
         except OSError:
             pass
-        for attempt in (1, 2):          # the first attempt sometimes fails (Errno 22)
-            try:
-                from hardware import sdcard
-                sdcard.SDCard(slot=3, width=1, sck=18, miso=38, mosi=23, cs=4,
-                              freq=1000000)
-            except Exception as e:
-                print("core2: SD attempt %d: %r" % (attempt, e))
-            try:
-                if "sd" in os.listdir("/"):
-                    return True
-            except OSError:
-                pass
-        try:                            # plain MicroPython driver (as in the hardware
-            import machine              # test: only after the first LCD access!)
-            os.mount(machine.SDCard(slot=2, sck=18, miso=38, mosi=23, cs=4), "/sd")
-            print("core2: SD mounted with machine.SDCard")
-            return True
+        try:
+            from hardware import sdcard
+            sdcard.SDCard(slot=2, width=1, sck=18, miso=38, mosi=23, cs=4,
+                          freq=self.c.SD_FREQ)
+            if "sd" in os.listdir("/"):
+                return True
         except Exception as e:
-            print("core2: SD fallback: %r" % e)
+            print("core2: SD: %r" % e)
         print("core2: no microSD card - logging to flash")
         return False
 
