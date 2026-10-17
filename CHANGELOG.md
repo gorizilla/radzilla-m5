@@ -3,6 +3,7 @@
 ## v2.0.0-dev4 – 2026-10-17 (in development)
 
 - Display brightness 140, dimmed 30 (after 90 s).
+- Swipe direction reversed: swipe right = next page, swipe left = previous.
 - Waking the display by picking it up is off (`WAKE_ON_PICKUP`); touch,
   buttons and alarms still wake it.
 - LEDs: 50 % for the heartbeat run and the splash, 80 % for alarms

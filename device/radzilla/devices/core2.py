@@ -26,10 +26,10 @@ import time
 import M5
 from M5 import Lcd
 
-EV_NEXT = "next"            # next page (swipe left, C)
+EV_NEXT = "next"            # next page (swipe right, C)
 EV_DTAP = "dtap"            # double tap on the display (next page)
 EV_TAP = "tap"              # single tap: (EV_TAP, x, y) – buttons on the SET page
-EV_PREV = "prev"            # previous page (swipe right, A)
+EV_PREV = "prev"            # previous page (swipe left, A)
 EV_DOSE = "dose"            # B: DOSE page
 EV_HOLD_B = "hold_b"        # B held: Bluetooth off / on
 EV_ACTIVE = "active"        # any touch / button: wakes the display
@@ -230,7 +230,7 @@ class Device:
             dur = time.ticks_diff(now, t0)
             self._down = None
             if abs(dx) >= self.c.SWIPE_PX and abs(dx) > abs(dy):
-                ev.append(EV_NEXT if dx < 0 else EV_PREV)
+                ev.append(EV_NEXT if dx > 0 else EV_PREV)     # swipe right = next page
                 self._last_tap = None
             elif dur <= self.c.TAP_MAX_MS and abs(dx) < self.c.TAP_MOVE_PX \
                     and abs(dy) < self.c.TAP_MOVE_PX:
