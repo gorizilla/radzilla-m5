@@ -40,7 +40,7 @@ it is started by hand from Thonny – nothing is changed on the device
 | swipe left / right | next / previous page |
 | button A / C | previous / next page |
 | button B | DOSE page |
-| hold button B | time sync (stage 3) |
+| hold button B (2 s) | Bluetooth to the RadiaCode off / on – while off: no readings, no alarms, no log; always on after a restart |
 
 ## Log files
 

@@ -12,6 +12,7 @@ ST_CONNECTING = "CONNECTING"
 ST_CONNECTED = "CONNECTED"
 ST_DISCONNECTED = "DISCONNECTED"
 ST_NO_AIOBLE = "AIOBLE MISSING"
+ST_BT_OFF = "BLUETOOTH OFF"
 
 PAGE_RATE, PAGE_CPS, PAGE_DOSE, PAGE_SET = 0, 1, 2, 3
 N_PAGES = 4
@@ -21,6 +22,7 @@ class State:
     def __init__(self):
         self.status = ST_START
         self.connected = False
+        self.bt_on = True           # Bluetooth to the RadiaCode (B held toggles)
         self.name = ""
         self.serial = None
         self.cps = None

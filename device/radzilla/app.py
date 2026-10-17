@@ -11,7 +11,8 @@
 # green normal, yellow HIGH, red DANGER, grey no data.
 #
 # Input: double tap / swipe on the display = next / previous page,
-#        A = previous, C = next, B = DOSE page, B held = time sync (stage 3).
+#        A = previous, C = next, B = DOSE page,
+#        B held = Bluetooth to the RadiaCode off / on (on after a restart).
 #
 # All parts run as cooperative asyncio tasks – nothing may block for long.
 import asyncio
@@ -91,7 +92,9 @@ def build_view():
     v.version = C.VERSION
 
     # state label (top right): DANGER > DOSE > HIGH > LIVE / NO RC
-    if not fresh:
+    if not S.bt_on:
+        v.state_txt, v.state_col = "BT OFF", gfx.GREY
+    elif not fresh:
         v.state_txt, v.state_col = "NO RC", gfx.GREY
     elif S.level == 2:
         v.state_txt, v.state_col = "DANGER", gfx.RED
@@ -216,6 +219,21 @@ def set_page(p):
     S.dirty = True
 
 
+async def _vibrate(ms):
+    DEV.vibrate(C.BT_VIB_LEVEL)
+    await asyncio.sleep_ms(ms)
+    DEV.vibrate(0)
+
+
+def toggle_bt():
+    """B held: Bluetooth to the RadiaCode off / on (on again after a restart).
+    While off there are no readings, no alarms and no log."""
+    S.bt_on = not S.bt_on
+    print("Bluetooth", "on" if S.bt_on else "off")
+    S.show_overlay(["BLUETOOTH ON" if S.bt_on else "BLUETOOTH OFF"], 1500)
+    asyncio.create_task(_vibrate(C.BT_VIB_MS))
+
+
 async def input_task():
     while True:
         try:
@@ -229,7 +247,7 @@ async def input_task():
                 elif e == "dose":
                     set_page(st.PAGE_DOSE)
                 elif e == "hold_b":
-                    S.show_overlay(["TIME SYNC", "COMES IN STAGE 3"], 2000)
+                    toggle_bt()
         except Exception as e:
             print("Input error:", repr(e))
         await asyncio.sleep_ms(20)
@@ -282,6 +300,16 @@ async def _show_info(rc, name):
         S.show_overlay(lines, C.RC_INFO_MS)
 
 
+def _bt_radio(on):
+    """Switch the Bluetooth radio itself (aioble switches it on again when
+    it scans)."""
+    try:
+        import bluetooth
+        bluetooth.BLE().active(on)
+    except Exception as e:
+        print("Bluetooth radio:", repr(e))
+
+
 async def rc_loop():
     """Find the RadiaCode, connect, read every RC_POLL_MS, reconnect on loss."""
     try:
@@ -293,10 +321,21 @@ async def rc_loop():
             await asyncio.sleep_ms(10000)
 
     while True:
+        if not S.bt_on:                          # switched off with B held
+            _bt_radio(False)
+            S.level = 0                          # alarms start anew after BT on
+            S.last_ms = None
+            S.last_rd_ms = None
+            _set_status(st.ST_BT_OFF)
+            while not S.bt_on:
+                await asyncio.sleep_ms(200)
+            continue
         rc = None
         try:
             _set_status(st.ST_SCAN)
             dev, name = await radiacode.find(C.RC_NAME, C.RC_NAME_PREFIX, C.RC_SCAN_MS)
+            if not S.bt_on:
+                continue
             if dev is None:
                 _set_status(st.ST_NOTFOUND)
                 await asyncio.sleep_ms(C.RC_RECONNECT_MS)
@@ -309,7 +348,7 @@ async def rc_loop():
             S.rc_sig_pending = 0
             await _show_info(rc, name)
             _set_status(st.ST_CONNECTED, True)
-            while rc.is_connected():
+            while rc.is_connected() and S.bt_on:
                 d = await rc.read_data()
                 if "cps" in d:
                     S.cps = d["cps"]
@@ -329,6 +368,8 @@ async def rc_loop():
         if rc:
             await rc.disconnect()
         S.last_rd_ms = None                      # gap: no dose is counted
+        if not S.bt_on:
+            continue
         _set_status(st.ST_DISCONNECTED)
         await asyncio.sleep_ms(C.RC_RECONNECT_MS)
 

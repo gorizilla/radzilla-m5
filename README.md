@@ -26,8 +26,8 @@ RadiaCode devices or with M5Stack.
 - **DOSE page**: 15-min dose (green → yellow → orange → red) and extra dose
   today (blue).
 - **Controls**: double tap or swipe on the display, buttons A / C = page,
-  B = DOSE page.
-- **Auto-dim** after 60 s, wakes on touch, picking up or an alarm.
+  B = DOSE page, hold B = Bluetooth off / on.
+- **Auto-dim** after 90 s, wakes on touch, picking up or an alarm.
 - **CSV log** on the microSD card (fallback: internal flash), 7 days.
 
 Planned: sirens / LEDs / vibration (stage 2), settings page with WiFi,

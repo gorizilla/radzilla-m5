@@ -16,8 +16,10 @@ First version of RadZilla M5 for the M5Stack Core2 (UIFlow 2.5.3).
   (green / yellow / red / grey).
 - Alarm, dose, trend and RadiaCode logic taken over from RadZilla v1.4.1;
   alarms now need no acknowledgement (HIGH and DANGER beep max. 3 times).
-- Touch controls (double tap, swipe), buttons A / B / C.
-- Brightness 150, auto-dim to 80 after 60 s, wake on touch / pick-up / alarm.
+- Touch controls (double tap, swipe), buttons A / B / C; holding B for 2 s
+  switches Bluetooth to the RadiaCode off / on (confirmation text +
+  vibration, always on after a restart).
+- Brightness 150, auto-dim to 40 after 90 s, wake on touch / pick-up / alarm.
 - CSV log on microSD (`/sd/RadZilla/logs/`, fallback flash), new columns
   Lat;Lon;Alt for GPS, 7 days / 25 MB.
 - Hardware and design test scripts in `tools/`.

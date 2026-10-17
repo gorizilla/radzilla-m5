@@ -14,20 +14,23 @@ DIAG = False                # True: print a status line to the shell every 5 s
 # --- Display -------------------------------------------------------------------
 BRIGHTNESS = 150            # 0..255
 DIM_ON = True               # dim after DIM_AFTER_S without any action
-DIM_AFTER_S = 60
-DIM_BRIGHTNESS = 80
+DIM_AFTER_S = 90
+DIM_BRIGHTNESS = 40
 WAKE_ON_PICKUP = True       # picking the device up wakes the display (motion sensor)
 PICKUP_G = 0.15             # change of acceleration that counts as "picked up"
 REDRAW_MS = 100             # check for redraws this often
 
 # --- Touch / buttons -----------------------------------------------------------
 # Double tap on the display or swipe = next / previous page,
-# A = previous page, C = next page, B = DOSE page, B held = time sync (stage 3)
+# A = previous page, C = next page, B = DOSE page,
+# B held = Bluetooth to the RadiaCode off / on (always on after a restart)
 TAP_MAX_MS = 250            # a tap is shorter than this ...
 TAP_MOVE_PX = 20            # ... and moves less than this
 DOUBLE_TAP_MS = 400         # max. gap between the two taps of a double tap
 SWIPE_PX = 60               # min. horizontal movement of a swipe
-B_HOLD_MS = 1000            # B held this long = time sync
+B_HOLD_MS = 2000            # B held this long = Bluetooth off / on
+BT_VIB_LEVEL = 200          # confirmation vibration (0..255) ...
+BT_VIB_MS = 150             # ... and its length
 
 # --- RadiaCode -----------------------------------------------------------------
 # Empty = first device whose name starts with RC_NAME_PREFIX.

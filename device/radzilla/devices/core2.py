@@ -13,6 +13,7 @@
 #   battery()                    (percent or None, charging True/False/None)
 #   now()                        ((Y, M, D, h, m, s), valid)
 #   set_volume(pct), tone(hz, ms)
+#   vibrate(level)               vibration motor 0..255
 #   accel()                      (x, y, z) in g or None
 #   sd_mounted                   True if the microSD card is usable
 #   poll()                       list of input events, see EV_*
@@ -25,7 +26,7 @@ from M5 import Lcd
 EV_NEXT = "next"            # next page (double tap, swipe left, C)
 EV_PREV = "prev"            # previous page (swipe right, A)
 EV_DOSE = "dose"            # B: DOSE page
-EV_HOLD_B = "hold_b"        # B held: time sync
+EV_HOLD_B = "hold_b"        # B held: Bluetooth off / on
 EV_ACTIVE = "active"        # any touch / button: wakes the display
 
 
@@ -104,6 +105,14 @@ class Device:
             Speaker.tone(int(hz), int(ms))
         except Exception as e:
             print("core2: tone:", repr(e))
+
+    def vibrate(self, level):
+        """Vibration motor 0..255 (0 = off)."""
+        from M5 import Power
+        try:
+            Power.setVibration(int(level))
+        except Exception as e:
+            print("core2: vibration:", repr(e))
 
     def accel(self):
         from M5 import Imu
