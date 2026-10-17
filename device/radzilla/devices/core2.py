@@ -7,8 +7,8 @@
 # M5Stack StopWatch) only needs its own module with the same interface:
 #
 #   W, H, LAYOUT                 display size and page layout ("rect" / "round")
-#   gfx()                        graphics object to draw on (off-screen canvas)
-#   show()                       push the finished frame to the display
+#   gfx()                        graphics object to draw on
+#   show()                       finish a frame (no-op when drawing directly)
 #   set_brightness(v)            0..255
 #   battery()                    (percent or None, charging True/False/None)
 #   now()                        ((Y, M, D, h, m, s), valid)
@@ -41,12 +41,7 @@ class Device:
         Lcd.setTextSize(1)              # reset leftovers from other programs
         self.lcd = Lcd
         Lcd.fillScreen(0x000000)        # first LCD access initialises the shared SPI bus
-        self.sd_mounted = self._mount_sd()     # before the canvas, like the hardware test
-        self.canvas = None
-        try:
-            self.canvas = Lcd.newCanvas(self.W, self.H, 16)
-        except Exception as e:
-            print("core2: no canvas (%r), drawing directly" % e)
+        self.sd_mounted = self._mount_sd()
         self._vol = None
         # touch gesture state
         self._down = None               # (t, x, y) at touch start
@@ -61,11 +56,12 @@ class Device:
 
     # ---------- display ----------
     def gfx(self):
-        return self.canvas if self.canvas is not None else Lcd
+        # Direct drawing: a pushed canvas does not reliably reach the Core2
+        # display (tools/rz_sd_test2.py), so the pages redraw only changes.
+        return Lcd
 
     def show(self):
-        if self.canvas is not None:
-            self.canvas.push(0, 0)
+        pass
 
     def set_brightness(self, v):
         try:
