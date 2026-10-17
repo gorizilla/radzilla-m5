@@ -179,7 +179,7 @@ class FX:
         if not self.c.VIB_ON:
             vib = 0
         cur = self.cur
-        level = self.c.LED_ALARM_LEVEL_PCT if (cur and cur[0] >= P_GEIGER) else self.c.LED_LEVEL_PCT
+        level = self.c.LED_ALARM_LEVEL_PCT if (cur and cur[0] >= P_GEIGER) else self.c.HEARTBEAT_LEVEL_PCT
         if (leds, level) != self.last_leds:
             self.last_leds = (leds, level)
             self.dev.leds(leds, level)

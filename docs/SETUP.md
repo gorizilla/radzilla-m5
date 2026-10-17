@@ -69,7 +69,7 @@ the clock shows `--:--` and nothing is logged.
 | `+WIFI` | scan, tap a network, enter the password on the keyboard, `OK` |
 | `PHONE` | connect the phone to the WiFi **RadZilla-Setup** with the password shown, open **http://192.168.4.1**, choose the network, enter the password, `SAVE` |
 | `SYNC` | sync the time now |
-| `LOG` | CSV log on (green) / off (grey), the footer shows `LOG SD` / `LOG OFF` – not stored, **off after every start** |
+| `LOG` | CSV log on (green) / off (grey), the footer shows `LOG SD` / `LOG OFF` – not stored, **on after every start** |
 
 Up to 5 networks are stored in `/flash/radzilla/wifi.json` (newest first,
 the strongest one in range is used). On the first start the network saved
@@ -97,7 +97,7 @@ import json; print([n["ssid"] for n in json.load(open("/flash/radzilla/wifi.json
 
 ## Log files
 
-The log is off after every start; switch it on with `LOG` on the SET page.
+The log is on after every start; switch it off with `LOG` on the SET page.
 A line every 5 s (`LOG_INTERVAL_S`) and immediately when an alarm starts or
 ends; written to the card once per minute.
 

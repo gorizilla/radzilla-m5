@@ -7,12 +7,12 @@
 # ⚠ Experimental: thresholds and conversion factor are not calibrated –
 #   see NOTICE.md. Not a safety device.
 
-VERSION = "2.0.0-dev7"
+VERSION = "2.0.0-dev8"
 DEVICE = "core2"            # hardware module in devices/ (later also "stopwatch")
 DIAG = False                # True: print a status line to the shell every 5 s
 
 # --- Display -------------------------------------------------------------------
-BRIGHTNESS = 140            # 0..255
+BRIGHTNESS = 130            # 0..255
 DIM_ON = True               # dim after DIM_AFTER_S without any action
 DIM_AFTER_S = 90
 DIM_BRIGHTNESS = 30
@@ -93,13 +93,14 @@ SPLASH_VIB_MS = 20          # ... and LED flash length
 
 # --- LEDs (10x SK6812 on the M5GO Bottom2) --------------------------------------------
 LED_ON = True
-LED_LEVEL_PCT = 50          # brightness 0..100: heartbeat run, splash
+LED_LEVEL_PCT = 50          # brightness 0..100: splash
 LED_ALARM_LEVEL_PCT = 80    # brightness 0..100: HIGH / DANGER / DOSE / Geiger
 LED_MODE = "run"            # "run" = lights move centre -> ends, "blink" = all at once
 LED_STEP_MS = 110           # speed of the run (per step)
 LED_BLINK_MS = 150          # length of a blink (LED_MODE = "blink")
 HEARTBEAT_ON = True         # normal state: short green run every HEARTBEAT_S
 HEARTBEAT_S = 20
+HEARTBEAT_LEVEL_PCT = 40    # brightness 0..100 of the heartbeat run
 HEARTBEAT_WHEN_DIM = True   # also while the display is dimmed
 LED_GREEN = (0, 255, 0)
 LED_YELLOW = (255, 170, 0)
@@ -171,9 +172,9 @@ PORTAL_TIMEOUT_S = 300      # phone setup closes after this time
 # Time;uSv/h;CPS;Alarm;Dose15;Lat;Lon;Alt  (Lat/Lon/Alt stay empty until GPS, stage 4)
 #   Alarm 0 none, 1 HIGH, 2 DANGER, 3 DOSE (state, DANGER > DOSE > HIGH)
 # Semicolon + decimal comma -> opens directly in German Numbers/Excel.
-# Log on / off with the LOG button on the SET page; not stored, off after every start.
+# Log on / off with the LOG button on the SET page; not stored, on after every start.
 # A line every LOG_INTERVAL_S seconds and immediately when an alarm starts or ends.
-LOG_ON = False
+LOG_ON = True
 SD_FREQ = 4_000_000          # microSD bus clock (shared with the display)
 LOG_SD_DIR = "/sd/RadZilla/logs"        # microSD (FAT32)
 LOG_INT_DIR = "/flash/RadZilla/logs"    # fallback without SD card

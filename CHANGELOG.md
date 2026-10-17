@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.0.0-dev8 – 2026-10-18 (in development)
+
+- Heartbeat run (every 20 s) at 40 % LED brightness (`HEARTBEAT_LEVEL_PCT`);
+  splash stays at 50 %, alarms at 80 %.
+- Display brightness 130 (was 140).
+- Log on by default again (line every 5 s); `LOG` on the SET page switches
+  it off until the next start.
+
 ## v2.0.0-dev7 – 2026-10-17 (in development)
 
 - **Log off by default**: fourth button `LOG` on the SET page, green = on,

@@ -410,7 +410,7 @@ def _scan():
 
 async def set_action(name):
     global NETS
-    if name == "log":                    # log on / off, not stored (off after a restart)
+    if name == "log":                    # log on / off, not stored (on after a restart)
         C.LOG_ON = not C.LOG_ON
         if not C.LOG_ON:
             LOG.flush()
