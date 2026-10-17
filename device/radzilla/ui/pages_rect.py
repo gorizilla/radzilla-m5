@@ -52,7 +52,6 @@ def _clear(g, x, y, w, h=14):
 
 # ---------- static parts (drawn once per page) ---------------------------------------
 def _static_chrome(g, v):
-    gfx.trefoil(g, RC_X - 12, 12, 7, YELLOW)
     g.drawRect(BAT_X, 5, 23, 14, GREY)                  # device battery outline
     g.fillRect(BAT_X + 23, 9, 2, 6, GREY)
     g.drawLine(0, 24, W, 24, DARK)
@@ -129,6 +128,8 @@ def _dyn_chrome(g, v):
     if _changed("time", v.time_str):
         _clear(g, 8, 5, 60)
         gfx.text(g, v.time_str, 8, 5, WHITE)
+    if _changed("rcsym", v.rc_connected):              # symbol: yellow connected, grey not
+        gfx.trefoil(g, RC_X - 12, 12, 7, YELLOW if v.rc_connected else GREY)
     if _changed("rc", v.rc_txt):
         _clear(g, RC_X, 5, BAT_X - 4 - RC_X)
         gfx.text(g, v.rc_txt, RC_X, 5, GREY)

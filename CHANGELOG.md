@@ -4,6 +4,8 @@
 
 - Status bar: radiation symbol and "RC 100%" 16 px further left (touched the
   battery icon at 100 %), device battery icon 4 px further right.
+- Radiation symbol in the status bar: grey without RadiaCode connection,
+  yellow when connected.
 
 ## v2.0.0-dev6 – 2026-10-17 (in development)
 
