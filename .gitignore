@@ -1,0 +1,21 @@
+# --- Secrets: never commit real credentials ---
+device/radzilla/secrets.py
+wifi.json
+secrets.py
+
+# --- Measurement logs downloaded from the board ---
+logs/
+device/logs/
+*.csv
+
+# --- 3D printing: only STL is kept, no printer-specific G-code ---
+*.gcode
+*.bgcode
+
+# --- Python / editor / OS clutter ---
+__pycache__/
+*.pyc
+*.mpy
+.DS_Store
+.vscode/
+.idea/
