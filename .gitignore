@@ -7,6 +7,7 @@ secrets.py
 logs/
 device/logs/
 *.csv
+!device/radzilla/sounds/*.wav
 
 # --- 3D printing: only STL is kept, no printer-specific G-code ---
 *.gcode
