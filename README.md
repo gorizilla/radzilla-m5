@@ -13,7 +13,7 @@ RadZilla M5 is the successor of RadZilla for the Waveshare ESP32-S3-LCD-1.69
 and an independent project, not affiliated with the manufacturer of
 RadiaCode devices or with M5Stack.
 
-**Status: v2.0.0 in development (stage 1 – base system).**
+**Status: v2.0.0 in development (stage 3 done).**
 
 ## Features (stage 1)
 
@@ -29,10 +29,12 @@ RadiaCode devices or with M5Stack.
   B = DOSE page, hold B = Bluetooth off / on.
 - **Auto-dim** after 90 s, wakes on touch, picking up or an alarm.
 - **CSV log** on the microSD card (fallback: internal flash), 7 days.
+- **Splash**, synced **sirens / LEDs / vibration**, **autostart**.
+- **SET page**: WiFi via on-screen keyboard or phone, time sync with the
+  PTB atomic clock.
 
-Planned: sirens / LEDs / vibration (stage 2), settings page with WiFi,
-Bluetooth switch and brightness (stage 3), GPS (stage 4), documentation and
-license (stage 5), M5Stack StopWatch support.
+Planned: GPS (stage 4), documentation and license (stage 5), M5Stack
+StopWatch support.
 
 ## Hardware
 

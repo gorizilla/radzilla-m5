@@ -25,6 +25,7 @@ from radzilla.core import state as st
 from radzilla.core import trend, dose, alarms
 from radzilla.core.logger import Logger
 from radzilla import fx
+from radzilla.core import timesync, wificfg
 from radzilla.ui import gfx, splash
 
 
@@ -154,6 +155,20 @@ def build_view():
     txt, ok = LOG.status(valid)
     v.footer_r, v.footer_r_col = txt, gfx.GREY if ok else gfx.RED
 
+    v.wifi = [s for s, _ in NETS]
+    v.wifi_max = C.WIFI_MAX
+    if SYNC["busy"]:
+        v.sync_txt, v.sync_col = "SYNCING ...", gfx.YELLOW
+    elif SYNC["msg"]:
+        v.sync_txt, v.sync_col = SYNC["msg"], gfx.RED
+    elif SYNC["last"]:
+        lt = SYNC["last"]
+        v.sync_txt, v.sync_col = "OK %02d.%02d. %02d:%02d" % (lt[2], lt[1], lt[3], lt[4]), gfx.GREEN
+    elif valid:
+        v.sync_txt, v.sync_col = "CLOCK OK", gfx.GREY
+    else:
+        v.sync_txt, v.sync_col = "NOT SYNCED", gfx.RED
+
     v.overlay = None
     if S.overlay is not None:
         if time.ticks_diff(S.overlay_until, time.ticks_ms()) > 0:
@@ -197,6 +212,9 @@ async def display_task():
             S.dirty = True
         if S.overlay is not None and time.ticks_diff(S.overlay_until, time.ticks_ms()) <= 0:
             S.dirty = True                   # overlay expired
+        if S.modal:                          # a SET dialog owns the display
+            await asyncio.sleep_ms(C.REDRAW_MS)
+            continue
         if S.dirty:
             S.dirty = False
             t0 = time.ticks_ms()
@@ -266,6 +284,17 @@ async def input_task():
                     continue
                 if e == "active":
                     LIGHT.wake()
+                elif S.modal:                # dialog: only taps, no page change
+                    if isinstance(e, tuple):
+                        MODAL_Q.append((e[1], e[2]))
+                elif isinstance(e, tuple):   # single tap: buttons on the SET page
+                    if S.page == st.PAGE_SET:
+                        b = PAGES.set_button_at(e[1], e[2])
+                        if b:
+                            asyncio.create_task(set_action(b))
+                elif e == "dtap":
+                    if S.page != st.PAGE_SET:
+                        set_page(S.page + 1)
                 elif e == "next":
                     set_page(S.page + 1)
                 elif e == "prev":
@@ -277,6 +306,176 @@ async def input_task():
         except Exception as e:
             print("Input error:", repr(e))
         await asyncio.sleep_ms(20)
+
+
+# ---------- WiFi, time sync, SET dialogs ---------------------------------------------------
+NETS = []
+SYNC = {"busy": False, "msg": None, "last": None, "last_try": None}
+MODAL_Q = []
+WIFI_LOCK = asyncio.Lock()
+LASTSYNC_PATH = "/flash/radzilla/lastsync.txt"
+
+
+def _load_lastsync():
+    try:
+        with open(LASTSYNC_PATH) as f:
+            s = f.read().strip()
+        return (int(s[0:4]), int(s[5:7]), int(s[8:10]), int(s[11:13]), int(s[14:16]), 0)
+    except Exception:
+        return None
+
+
+def _save_lastsync(t):
+    try:
+        with open(LASTSYNC_PATH, "w") as f:
+            f.write("%04d-%02d-%02d %02d:%02d\n" % t[:5])
+    except OSError as e:
+        print("lastsync:", repr(e))
+
+
+async def do_sync(show=False):
+    """Time sync over WiFi. show=True: result as a short overlay."""
+    if WIFI_LOCK.locked():
+        return
+    async with WIFI_LOCK:
+        SYNC["busy"] = True
+        SYNC["msg"] = None
+        SYNC["last_try"] = time.ticks_ms()
+        S.dirty = True
+        try:
+            ok, res = await timesync.sync(DEV, NETS, C.NTP_SERVERS, C.WIFI_TIMEOUT_MS)
+        except Exception as e:
+            ok, res = False, "SYNC ERROR"
+            print("Time sync:", repr(e))
+        SYNC["busy"] = False
+        if ok:
+            SYNC["last"] = res
+            _save_lastsync(res)
+            print("Time set: %04d-%02d-%02d %02d:%02d:%02d" % res[:6])
+        else:
+            SYNC["msg"] = res
+            print("Time sync failed:", res)
+        if show:
+            S.show_overlay(["TIME OK" if ok else res], 1500)
+        PAGES.invalidate()
+        S.dirty = True
+
+
+async def sync_task():
+    """Sync after the splash and then every SYNC_INTERVAL_H hours."""
+    if C.SYNC_AT_START and NETS:
+        await do_sync()
+    while True:
+        await asyncio.sleep_ms(60000)
+        lt = SYNC["last_try"]
+        if NETS and (lt is None or time.ticks_diff(time.ticks_ms(), lt) >= C.SYNC_INTERVAL_H * 3600000):
+            await do_sync()
+
+
+async def get_tap(timeout_ms):
+    """Next tap (x, y) for a dialog, or None after timeout_ms."""
+    t0 = time.ticks_ms()
+    while time.ticks_diff(time.ticks_ms(), t0) < timeout_ms:
+        if MODAL_Q:
+            return MODAL_Q.pop(0)
+        await asyncio.sleep_ms(20)
+    return None
+
+
+def _scan():
+    import network
+    sta = network.WLAN(network.STA_IF)
+    sta.active(True)
+    best = {}
+    try:
+        for r in sta.scan():
+            try:
+                ssid = r[0].decode()
+            except Exception:
+                continue
+            if ssid and (ssid not in best or r[3] > best[ssid]):
+                best[ssid] = r[3]
+    finally:
+        sta.active(False)
+    return sorted(best.items(), key=lambda x: -x[1])
+
+
+async def set_action(name):
+    global NETS
+    if name == "sync":
+        if not NETS:
+            S.show_overlay(["NO NETWORK SAVED"], 1500)
+            return
+        await do_sync(show=True)
+        return
+    if S.modal or WIFI_LOCK.locked():
+        return
+    from radzilla.ui import setup_rect as dlg
+    g = DEV.gfx()
+    S.modal = True
+    MODAL_Q.clear()
+    new = None
+    try:
+        async with WIFI_LOCK:
+            if name == "add":
+                dlg.message(g, ["SCANNING ..."])
+                await asyncio.sleep_ms(50)
+                nets = _scan()
+                ssid = await dlg.choose_network(g, nets, get_tap)
+                if ssid:
+                    pw = await dlg.keyboard(g, "PASSWORD " + ssid, get_tap)
+                    if pw is not None:
+                        new = (ssid, pw)
+            elif name == "phone":
+                new = await _phone_setup(g, dlg)
+        if new:
+            NETS = wificfg.add(NETS, new[0], new[1], C.WIFI_MAX)
+            dlg.message(g, ["SAVED", new[0][:22]], gfx.GREEN)
+            await asyncio.sleep_ms(1200)
+    except Exception as e:
+        print("SET dialog:", repr(e))
+    finally:
+        S.modal = False
+        MODAL_Q.clear()
+        PAGES.invalidate()
+        S.dirty = True
+    if new:
+        await do_sync(show=True)
+
+
+async def _phone_setup(g, dlg):
+    import random
+    from radzilla.core import portal
+    dlg.message(g, ["SCANNING ..."])
+    await asyncio.sleep_ms(50)
+    ssids = [s for s, _ in _scan()]
+    pw = "".join(str(random.randint(0, 9)) for _ in range(8))
+    p = portal.Portal(ssids, pw)
+    try:
+        await p.start()
+    except Exception as e:
+        print("portal:", repr(e))
+        dlg.message(g, ["PHONE SETUP FAILED"], gfx.RED)
+        await asyncio.sleep_ms(1500)
+        return None
+    t0 = time.ticks_ms()
+    last_left = None
+    dlg.phone_screen(g, portal.AP_NAME, pw, portal.AP_IP, C.PORTAL_TIMEOUT_S)
+    try:
+        while p.result is None:
+            left = C.PORTAL_TIMEOUT_S - time.ticks_diff(time.ticks_ms(), t0) // 1000
+            if left <= 0:
+                break
+            if left != last_left:
+                last_left = left
+                dlg.phone_countdown(g, left)
+            tap = await get_tap(200)
+            if dlg.phone_cancel_hit(tap):
+                break
+        await asyncio.sleep_ms(500)                # let the phone get the "saved" page
+    finally:
+        await p.stop()
+    return p.result
 
 
 # ---------- log -----------------------------------------------------------------------------
@@ -405,6 +604,9 @@ async def main():
     global DEV, LOG, PAGES, LIGHT, FX
     DEV = _load_device()
     PAGES = _load_pages(DEV.LAYOUT)
+    global NETS
+    NETS = wificfg.load()
+    SYNC["last"] = _load_lastsync()
     LOG = Logger(C, DEV.sd_mounted)
     LIGHT = Light()
     FX = fx.FX(DEV, C)
@@ -419,6 +621,7 @@ async def main():
     asyncio.create_task(log_task())
     asyncio.create_task(FX.task())
     asyncio.create_task(alarms.task(FX, S, C))
+    asyncio.create_task(sync_task())
     if C.DIAG:
         asyncio.create_task(diag_task())
     await rc

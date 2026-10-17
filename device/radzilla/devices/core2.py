@@ -19,13 +19,16 @@
 #   accel()                      (x, y, z) in g or None
 #   sd_mounted                   True if the microSD card is usable
 #   poll()                       list of input events, see EV_*
+#   set_utc(unix)                set the clock (UTC)
 import os
 import time
 
 import M5
 from M5 import Lcd
 
-EV_NEXT = "next"            # next page (double tap, swipe left, C)
+EV_NEXT = "next"            # next page (swipe left, C)
+EV_DTAP = "dtap"            # double tap on the display (next page)
+EV_TAP = "tap"              # single tap: (EV_TAP, x, y) – buttons on the SET page
 EV_PREV = "prev"            # previous page (swipe right, A)
 EV_DOSE = "dose"            # B: DOSE page
 EV_HOLD_B = "hold_b"        # B held: Bluetooth off / on
@@ -94,8 +97,28 @@ class Device:
         return pct, chg
 
     def now(self):
-        t = time.localtime()
-        return t[:6], t[0] >= 2025
+        """German local time from the clock (which runs in UTC):
+        ((Y, M, D, h, m, s), valid). Valid only after a time sync."""
+        from radzilla.core import timesync
+        try:
+            import machine
+            r = machine.RTC().datetime()        # UIFlow: UTC (Y, M, D, wd, h, m, s, us)
+            utc = (r[0], r[1], r[2], r[4], r[5], r[6])
+        except Exception:
+            utc = time.gmtime()[:6]
+        if utc[0] < 2025:
+            return utc, False
+        return timesync.berlin_from_unix(timesync.unix_from_utc(utc))[:6], True
+
+    def set_utc(self, unix):
+        """Set system time and the battery-backed BM8563 (UIFlow's
+        machine.RTC().datetime() writes both) to UTC."""
+        from radzilla.core import timesync
+        import machine
+        days, rem = divmod(unix, 86400)
+        y, m, d = timesync.civil_from_days(days)
+        wd = (days + 3) % 7                      # 0 = Monday
+        machine.RTC().datetime((y, m, d, wd, rem // 3600, (rem % 3600) // 60, rem % 60, 0))
 
     # ---------- sound / motion ----------
     def set_volume(self, pct):
@@ -210,9 +233,10 @@ class Device:
                 self._last_tap = None
             elif dur <= self.c.TAP_MAX_MS and abs(dx) < self.c.TAP_MOVE_PX \
                     and abs(dy) < self.c.TAP_MOVE_PX:
+                ev.append((EV_TAP, x0, y0))               # single tap with position
                 if self._last_tap is not None and \
                         time.ticks_diff(now, self._last_tap) <= self.c.DOUBLE_TAP_MS:
-                    ev.append(EV_NEXT)
+                    ev.append(EV_DTAP)
                     self._last_tap = None
                 else:
                     self._last_tap = now

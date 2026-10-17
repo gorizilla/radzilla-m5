@@ -7,7 +7,7 @@
 # ⚠ Experimental: thresholds and conversion factor are not calibrated –
 #   see NOTICE.md. Not a safety device.
 
-VERSION = "2.0.0-dev2"
+VERSION = "2.0.0-dev3"
 DEVICE = "core2"            # hardware module in devices/ (later also "stopwatch")
 DIAG = False                # True: print a status line to the shell every 5 s
 
@@ -146,6 +146,18 @@ TREND_WINDOW_S = 10         # average of the last window vs. the window before
 TREND_PCT = 0.10
 TREND_MIN_USV = 0.02
 TREND_MIN_CPS = 1.0
+
+# --- WiFi / time sync (SET page) ---------------------------------------------------
+# Networks are stored in /flash/radzilla/wifi.json (never in git); on the first
+# start the network saved in UIFlow is taken over. WiFi is only switched on
+# for the time sync. The clock keeps running on its battery after a sync.
+# Without a valid time the clock shows --:-- and the log is off.
+WIFI_MAX = 5                # stored networks; the strongest one in range is used
+WIFI_TIMEOUT_MS = 15000     # give up connecting after this time
+NTP_SERVERS = ("ptbtime1.ptb.de", "ptbtime2.ptb.de")   # PTB atomic clock
+SYNC_AT_START = True        # after the splash, if a network is stored
+SYNC_INTERVAL_H = 24        # sync again after this time
+PORTAL_TIMEOUT_S = 300      # phone setup closes after this time
 
 # --- CSV log ------------------------------------------------------------------------
 # Time;uSv/h;CPS;Alarm;Dose15;Lat;Lon;Alt  (Lat/Lon/Alt stay empty until GPS, stage 4)

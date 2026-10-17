@@ -83,12 +83,43 @@ def _static_dose(g, v):
     gfx.text(g, "OF " + v.e_lim, 312, 178, GREY, align="right")
 
 
+# SET page: tap targets (name -> x, y, w, h), used by app.py for hit tests
+SET_BUTTONS = {"add": (16, 172, 92, 26), "phone": (114, 172, 92, 26),
+               "sync": (212, 172, 92, 26)}
+SET_LABELS = {"add": "+ WIFI", "phone": "PHONE", "sync": "SYNC"}
+
+
+def set_button_at(x, y):
+    for name, (bx, by, bw, bh) in SET_BUTTONS.items():
+        if bx <= x < bx + bw and by - 6 <= y < by + bh + 6:
+            return name
+    return None
+
+
 def _static_set(g, v):
     gfx.brackets(g, 10, 58, 300, 146, YELLOW_DIM)
-    gfx.text(g, "SETTINGS", 160, 80, YELLOW, align="center")
-    gfx.text(g, "COMING IN STAGE 3", 160, 110, GREY, align="center")
-    gfx.text(g, "WIFI  BT  LIGHT  MENU", 160, 134, GREY, align="center")
-    gfx.text(g, "RADZILLA M5 " + v.version.upper(), 160, 172, GREY, align="center")
+    gfx.text(g, "WIFI", 22, 64, GREY)
+    gfx.text(g, "TIME", 22, 148, GREY)
+    for name, (x, y, w, h) in SET_BUTTONS.items():
+        g.drawRect(x, y, w, h, YELLOW)
+        gfx.text(g, SET_LABELS[name], x + w // 2, y + 6, YELLOW, align="center")
+
+
+def _dyn_set(g, v):
+    if _changed("wifi", tuple(v.wifi)):
+        _clear(g, 22, 82, 284, 60)
+        if not v.wifi:
+            gfx.text(g, "NO NETWORK SAVED", 22, 84, GREY)
+        for i, ssid in enumerate(v.wifi[:3]):
+            gfx.text(g, ssid[:23], 22, 84 + i * 19, WHITE)
+        if len(v.wifi) > 3:
+            gfx.text(g, "+%d" % (len(v.wifi) - 3), 306, 122, GREY, align="right")
+    if _changed("wcount", len(v.wifi)):
+        _clear(g, 230, 64, 76)
+        gfx.text(g, "%d/%d" % (len(v.wifi), v.wifi_max), 306, 64, GREY, align="right")
+    if _changed("sync", (v.sync_txt, v.sync_col)):
+        _clear(g, 76, 148, 230)
+        gfx.text(g, v.sync_txt[:19], 306, 148, v.sync_col, align="right")
 
 
 # ---------- dynamic parts (redrawn on change) ---------------------------------------------
@@ -183,12 +214,12 @@ def draw(g, v):
     v.d_frac_seg = int(min(1.0, v.d_frac) * 30 + 0.5)
     v.e_frac_seg = int(min(1.0, v.e_frac) * 24 + 0.5)
 
-    if v.overlay:                                   # info box on top, page frozen
+    if v.overlay and _page[0] == v.page:            # info box on top, page frozen
         if v.overlay != _overlay[0]:
             _overlay[0] = v.overlay
             _overlay_box(g, v.overlay)
         return
-    if _overlay[0] is not None:                     # overlay just ended
+    if _overlay[0] is not None and not v.overlay:   # overlay just ended
         _overlay[0] = None
         _page[0] = None
 
@@ -209,3 +240,8 @@ def draw(g, v):
         _dyn_dose(g, v)
     elif v.page in (0, 1):
         _dyn_rate(g, v)
+    else:
+        _dyn_set(g, v)
+    if v.overlay:                                   # page was rebuilt below an overlay
+        _overlay[0] = v.overlay
+        _overlay_box(g, v.overlay)

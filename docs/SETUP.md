@@ -58,6 +58,22 @@ it is started by hand from Thonny – nothing is changed on the device
 | button B | DOSE page |
 | hold button B (2 s) | Bluetooth to the RadiaCode off / on – while off: no readings, no alarms, no log; always on after a restart |
 
+## SET page – WiFi and time
+
+The WiFi is only used for the time sync (PTB atomic clock). After a sync the
+clock keeps running on its battery, also without WiFi. Without a valid time
+the clock shows `--:--` and nothing is logged.
+
+| Button | Function |
+|---|---|
+| `+ WIFI` | scan, tap a network, enter the password on the keyboard, `OK` |
+| `PHONE` | connect the phone to the WiFi **RadZilla-Setup** with the password shown, open **http://192.168.4.1**, choose the network, enter the password, `SAVE` |
+| `SYNC` | sync the time now |
+
+Up to 5 networks are stored in `/flash/radzilla/wifi.json` (newest first,
+the strongest one in range is used). On the first start the network saved
+in UIFlow is taken over. The time is synced after the start and every 24 h.
+
 ## Log files
 
 `/sd/RadZilla/logs/rc_YYYY-MM-DD_HHMM.csv`, without SD card

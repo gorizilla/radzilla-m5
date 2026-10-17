@@ -1,5 +1,24 @@
 # Changelog
 
+## v2.0.0-dev3 – 2026-10-17 (in development, stage 3)
+
+- **SET page**: stored WiFi networks (max. 5), time status, buttons
+  `+ WIFI`, `PHONE`, `SYNC`.
+- **+ WIFI**: scan, choose a network, password with the on-screen keyboard
+  (dot-matrix style; a–z, A–Z, 0–9, symbols).
+- **PHONE**: own WiFi "RadZilla-Setup" (WPA2, random 8-digit password on the
+  display), page http://192.168.4.1 to choose a network and enter the
+  password; closes after saving or 5 min.
+- Networks in `/flash/radzilla/wifi.json` (never in git); the network saved
+  in UIFlow is taken over on the first start.
+- **Time sync** with the PTB atomic clock (NTP) after the splash, every 24 h
+  and with `SYNC`; WiFi only on during the sync. The clock runs in UTC
+  (system time + battery-backed BM8563), the display shows German local
+  time with automatic summer time. Without a valid time: `--:--`, log off.
+- Full 5x7 font (all printable ASCII characters).
+- Single taps with position for buttons; double tap changes the page except
+  on the SET page.
+
 ## v2.0.0-dev2 – 2026-10-17 (in development, stage 2)
 
 - **Splash**: atom with the radiation symbol as core, three orbits and green

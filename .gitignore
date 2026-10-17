@@ -1,6 +1,7 @@
 # --- Secrets: never commit real credentials ---
 device/radzilla/secrets.py
 wifi.json
+lastsync.txt
 secrets.py
 
 # --- Measurement logs downloaded from the board ---

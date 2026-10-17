@@ -52,6 +52,7 @@ class State:
         self.dirty = True
         self.wake = False           # an alarm asks to wake the display
         self.dimmed = False
+        self.modal = False          # a SET dialog owns display and touch
 
     def fresh(self, stale_ms):
         """True if the last reading is recent enough to be shown."""
