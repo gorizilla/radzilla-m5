@@ -74,6 +74,26 @@ Up to 5 networks are stored in `/flash/radzilla/wifi.json` (newest first,
 the strongest one in range is used). On the first start the network saved
 in UIFlow is taken over. The time is synced after the start and every 24 h.
 
+### WiFi from the Thonny shell (alternative)
+
+Stop RadZilla first (hold **A** while switching on, or **Stop** in Thonny).
+Replace the placeholders – never put real passwords into git or a chat.
+
+Set the list (overwrites all stored networks):
+```python
+import json; open("/flash/radzilla/wifi.json","w").write(json.dumps([{"ssid":"MY_WIFI","pw":"MY_PASSWORD"}]))
+```
+
+Two networks:
+```python
+import json; open("/flash/radzilla/wifi.json","w").write(json.dumps([{"ssid":"WIFI_1","pw":"PASSWORD_1"},{"ssid":"WIFI_2","pw":"PASSWORD_2"}]))
+```
+
+Show the stored network names (without passwords):
+```python
+import json; print([n["ssid"] for n in json.load(open("/flash/radzilla/wifi.json"))])
+```
+
 ## Log files
 
 `/sd/RadZilla/logs/rc_YYYY-MM-DD_HHMM.csv`, without SD card
