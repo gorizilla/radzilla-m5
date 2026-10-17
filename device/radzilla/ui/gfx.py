@@ -63,6 +63,8 @@ _F57 = {
     "u": ("     ", "     ", "#   #", "#   #", "#   #", "#  ##", " ## #"),
     "v": ("     ", "     ", "#   #", "#   #", "#   #", " # # ", "  #  "),
     "h": ("#    ", "#    ", "# ## ", "##  #", "#   #", "#   #", "#   #"),
+    "k": ("#    ", "#    ", "#  # ", "# #  ", "##   ", "# #  ", "#  # "),
+    "m": ("     ", "     ", "## # ", "# # #", "# # #", "#   #", "#   #"),
     ".": ("     ", "     ", "     ", "     ", "     ", " ##  ", " ##  "),
     ",": ("     ", "     ", "     ", "     ", " ##  ", "  #  ", " #   "),
     ":": ("     ", " ##  ", " ##  ", "     ", " ##  ", " ##  ", "     "),
@@ -167,6 +169,22 @@ def brackets(g, x, y, w, h, col, ln=10):
                            (x, y + h, 1, -1), (x + w, y + h, -1, -1)):
         g.fillRect(cx if sx > 0 else cx - ln, cy if sy > 0 else cy - 1, ln, 2, col)
         g.fillRect(cx if sx > 0 else cx - 1, cy if sy > 0 else cy - ln, 2, ln, col)
+
+
+# ---------- trend arrow ------------------------------------------------------------------------
+def arrow(g, x, y, s, dirn, col):
+    """Arrow in an s x s box: 0 = right (stable), 1 = up, -1 = down."""
+    t = s // 4
+    h = s // 2
+    if dirn == 0:
+        g.fillRect(x, y + h - t // 2, s - h, t, col)
+        g.fillTriangle(x + h - 1, y + 2, x + s, y + h, x + h - 1, y + s - 2, col)
+    elif dirn > 0:
+        g.fillRect(x + h - t // 2, y + h - 1, t, s - h + 1, col)
+        g.fillTriangle(x + 2, y + h, x + h, y, x + s - 2, y + h, col)
+    else:
+        g.fillRect(x + h - t // 2, y, t, h + 2, col)
+        g.fillTriangle(x + 2, y + h, x + h, y + s, x + s - 2, y + h, col)
 
 
 # ---------- 7-segment digits -------------------------------------------------------------------

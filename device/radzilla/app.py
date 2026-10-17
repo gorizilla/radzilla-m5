@@ -50,13 +50,29 @@ PAGES = None
 
 
 # ---------- formatting ---------------------------------------------------------------
-def fmt_val(v):
-    """Value for 4 seven-segment digits: 0.12 / 12.5 / 125 / 9999."""
-    if v < 10:
+def fmt3(v):
+    """3 significant digits: 0.12 / 9.87 / 12.5 / 125 (up to 999)."""
+    if v < 9.995:
         return "%.2f" % v
-    if v < 100:
+    if v < 99.95:
         return "%.1f" % v
-    return "%d" % min(9999, int(v + 0.5))
+    return "%d" % int(v + 0.5)
+
+
+def fmt_usv(v):
+    """Dose rate -> (text, unit); from 1000 µSv/h in mSv/h."""
+    if v < 999.5:
+        return fmt3(v), "uSv/h"
+    return fmt3(min(v / 1000, 999)), "mSv/h"
+
+
+def fmt_cps(v):
+    """Count rate -> (text, unit); 100..9999 as integer, from 10000 in kCPS."""
+    if v < 99.95:
+        return fmt3(v), "CPS"
+    if v < 9999.5:
+        return "%d" % int(v + 0.5), "CPS"
+    return fmt3(min(v / 1000, 999)), "kCPS"
 
 
 def fmt_pct(p):
@@ -106,17 +122,17 @@ def build_view():
         v.state_txt, v.state_col = "LIVE", gfx.GREEN
 
     v.main_col = LEVEL_COL[S.level] if fresh else gfx.GREY
-    usv_s = fmt_val(S.usv) if fresh else "--"
-    cps_s = fmt_val(S.cps) if fresh else "--"
+    usv_s, usv_u = fmt_usv(S.usv) if fresh else ("--", "uSv/h")
+    cps_s, cps_u = fmt_cps(S.cps) if fresh else ("--", "CPS")
     v.ring_frac = ring_frac(S.usv) if fresh else 0.0
     if S.page == st.PAGE_CPS:
-        v.big, v.big_label, v.big_unit = cps_s, "COUNT RATE", "CPS"
-        v.sub_label, v.sub_val = "uSv/h", usv_s
-        v.trend = trend.text(trend.get(S, C, trend.CPS) if fresh else None)
+        v.big, v.big_label, v.big_unit = cps_s, "COUNT RATE", cps_u
+        v.sub_label, v.sub_val = usv_u, usv_s
+        v.trend = trend.get(S, C, trend.CPS) if fresh else None
     else:
-        v.big, v.big_label, v.big_unit = usv_s, "DOSE RATE", "uSv/h"
-        v.sub_label, v.sub_val = "CPS", cps_s
-        v.trend = trend.text(trend.get(S, C, trend.USV) if fresh else None)
+        v.big, v.big_label, v.big_unit = usv_s, "DOSE RATE", usv_u
+        v.sub_label, v.sub_val = cps_u, cps_s
+        v.trend = trend.get(S, C, trend.USV) if fresh else None
     v.sub_col = gfx.WHITE if fresh else gfx.GREY
 
     # dose

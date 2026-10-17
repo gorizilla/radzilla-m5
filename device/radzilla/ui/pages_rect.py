@@ -15,7 +15,7 @@
 #   * 7-segment digits, ring, symbol -> painted over completely (no clearing)
 #   * small texts -> their field is cleared, then written again
 from radzilla.ui import gfx
-from radzilla.ui.gfx import (BG, WHITE, GREY, DARK, YELLOW, YELLOW_DIM, BLUE)
+from radzilla.ui.gfx import (BG, WHITE, GREY, DARK, YELLOW, YELLOW_DIM, BLUE, GREEN, ORANGE)
 
 W, H = 320, 240
 TABS = ("RATE", "CPS", "DOSE", "SET")
@@ -23,6 +23,9 @@ TAB_X, TAB_STEP, TAB_W, TAB_Y, TAB_H = 8, 56, 52, 29, 20
 GAUGE_CX, GAUGE_CY = 82, 131
 DOSE_CX = 160
 SMALL = dict(w=16, h=34, t=5, gap=4, ndig=3, dots=False)
+BIG_RIGHT = 286                         # big value right edge, trend arrow behind it
+ARROW_X, ARROW_Y, ARROW_S = 290, 92, 24
+TREND_COL = {0: GREY, 1: ORANGE, -1: GREEN}   # stable / rising / falling
 
 _prev = {}              # last drawn value per field
 _page = [None]          # page currently on screen
@@ -66,9 +69,7 @@ def _static_chrome(g, v):
 def _static_rate(g, v):
     gfx.brackets(g, 10, 58, 144, 146, YELLOW_DIM)
     gfx.text(g, v.big_label, 168, 60, GREY)
-    gfx.text(g, v.big_unit, 168, 138, GREY)
     g.drawLine(168, 158, 312, 158, DARK)
-    gfx.text(g, v.sub_label, 168, 165, GREY)
     gfx.text(g, "DOSE 15M", 168, 187, GREY)
 
 
@@ -123,10 +124,17 @@ def _dyn_rate(g, v):
     if _changed("sym", v.main_col):
         gfx.trefoil(g, GAUGE_CX, GAUGE_CY, 40, v.main_col)
     if _changed("big", (v.big, v.main_col)):
-        gfx.seg_number(g, v.big, 314, 80, v.main_col)
+        gfx.seg_number(g, v.big, BIG_RIGHT, 80, v.main_col, w=22, gap=6)
     if _changed("trend", v.trend):
-        _clear(g, 230, 138, 82)
-        gfx.text(g, v.trend, 312, 138, GREY, align="right")
+        g.fillRect(ARROW_X, ARROW_Y, ARROW_S + 1, ARROW_S + 1, BG)
+        if v.trend is not None:
+            gfx.arrow(g, ARROW_X, ARROW_Y, ARROW_S, v.trend, TREND_COL[v.trend])
+    if _changed("unit", v.big_unit):
+        _clear(g, 168, 138, 60)
+        gfx.text(g, v.big_unit, 168, 138, GREY)
+    if _changed("sublabel", v.sub_label):
+        _clear(g, 168, 165, 60)
+        gfx.text(g, v.sub_label, 168, 165, GREY)
     if _changed("sub", (v.sub_val, v.sub_col)):
         _clear(g, 236, 165, 76)
         gfx.text(g, v.sub_val, 312, 165, v.sub_col, align="right")

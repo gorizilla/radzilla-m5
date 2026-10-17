@@ -14,6 +14,9 @@ First version of RadZilla M5 for the M5Stack Core2 (UIFlow 2.5.3).
   display), 4 MHz; slot 3 must not be used on the Core2.
 - Pages RATE, CPS, DOSE, SET (placeholder); colour by alarm state
   (green / yellow / red / grey).
+- Values with 3 significant digits (0.12 / 12.5 / 125); from 1000 µSv/h in
+  mSv/h, from 10 000 CPS in kCPS. Trend as arrow behind the value
+  (grey stable, orange rising, green falling).
 - Alarm, dose, trend and RadiaCode logic taken over from RadZilla v1.4.1;
   alarms now need no acknowledgement (HIGH and DANGER beep max. 3 times).
 - Touch controls (double tap, swipe), buttons A / B / C; holding B for 2 s
