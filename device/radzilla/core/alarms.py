@@ -6,19 +6,14 @@
 #   1 HIGH    dose rate >= LEVEL1_USV                       yellow
 #   2 DANGER  dose rate >= LEVEL2_USV                       red
 #   3 DOSE    dose within DOSE_WINDOW_MIN >= DOSE_LIMIT_USV red
-# No acknowledgement: HIGH / DANGER beep ALARMx_MAX_REPEAT times per alarm
-# event, DOSE plays once. An alarm ends below threshold x (1 - HYSTERESIS).
-# Stage 1 uses simple tones; sirens, LEDs and vibration follow in stage 2.
-#
-# The sound functions only need dev.tone(freq_hz, ms) and dev.set_volume(pct).
+# No acknowledgement: HIGH beeps ALARM1_MAX_REPEAT times per alarm event,
+# DANGER and DOSE play their siren once. An alarm ends below threshold x (1 - HYSTERESIS).
+# Sound, LEDs and vibration are played by fx.py.
 import asyncio
-import math
-import random
 import time
 
+from radzilla import fx as fx_mod
 from radzilla.core import dose
-
-SOUND = asyncio.Lock()              # one sound at a time
 
 
 def new_level(C, usv, cur):
@@ -71,64 +66,45 @@ async def play_rc_signal(S, C, rc):
         S.rc_sig_pending = 0
 
 
-# ---------- sounds -------------------------------------------------------------------
-async def beep(dev, C, freq, n, on_ms, pause_ms, wait=False):
-    if SOUND.locked() and not wait:
-        return
-    async with SOUND:
-        dev.set_volume(C.ALARM_VOLUME_PCT)
-        for i in range(n):
-            dev.tone(freq, on_ms)
-            await asyncio.sleep_ms(on_ms + (pause_ms if i < n - 1 else 0))
-
-
-async def geiger(dev, S, C):
-    """Random clicks like a Geiger counter (dose pre-warning)."""
-    async with SOUND:
-        dev.set_volume(C.ALARM_VOLUME_PCT)
-        t0 = time.ticks_ms()
-        while time.ticks_diff(time.ticks_ms(), t0) < C.GEIGER_DURATION_MS:
-            if S.dose_active:
-                return
-            dev.tone(C.GEIGER_FREQ_HZ, C.GEIGER_CLICK_MS)
-            gap = -math.log(1.0 - random.random()) / C.GEIGER_RATE_HZ
-            await asyncio.sleep_ms(C.GEIGER_CLICK_MS + max(5, int(gap * 1000)))
-
-
-def _cfg(C, lvl):
-    if lvl == 1:
-        return (C.ALARM1_ON, C.ALARM1_FREQ_HZ, C.ALARM1_BEEPS, C.ALARM1_BEEP_MS,
-                C.ALARM1_PAUSE_MS, C.ALARM1_INTERVAL_MS, C.ALARM1_MAX_REPEAT)
-    return (C.ALARM2_ON, C.ALARM2_FREQ_HZ, C.ALARM2_BEEPS, C.ALARM2_BEEP_MS,
-            C.ALARM2_PAUSE_MS, C.ALARM2_INTERVAL_MS, C.ALARM2_MAX_REPEAT)
-
-
-async def task(dev, S, C):
-    """Dose window upkeep, DOSE sound, Geiger pre-warning, HIGH/DANGER beeps."""
+async def task(fx, S, C):
+    """Dose window upkeep and the alarm effects (sound, LEDs, vibration):
+    HIGH beep + yellow run every ALARM1_INTERVAL_MS (max. ALARM1_MAX_REPEAT),
+    DANGER siren once per event, DOSE siren once per event, Geiger pre-warning
+    at RING_WARN_PCT, green heartbeat in the normal state."""
+    last_heart = time.ticks_ms()
+    danger_done = False
     while True:
         await asyncio.sleep_ms(50)
         now = time.ticks_ms()
         fresh = S.fresh(C.RC_STALE_MS)
         dose.trim(S, C, now)                  # the dose decays also without data
         if dose.update_alarm(S, C) and C.ALARM3_ON and S.level < 2 and fresh:
-            asyncio.create_task(beep(dev, C, C.ALARM3_FREQ_HZ, C.ALARM3_BEEPS,
-                                     C.ALARM3_BEEP_MS, C.ALARM3_PAUSE_MS, wait=True))
+            fx.dose()
+            S.wake = True
         if C.GEIGER_ON:
             p = dose.pct(S, C)
             if S.geiger_armed and C.RING_WARN_PCT <= p < 100:
                 S.geiger_armed = False
-                if not SOUND.locked():
-                    asyncio.create_task(geiger(dev, S, C))
+                if not fx.busy(fx_mod.P_GEIGER):
+                    fx.geiger()
             elif not S.geiger_armed and p < C.RING_WARN_PCT * (1 - C.HYSTERESIS):
                 S.geiger_armed = True
 
         lvl = S.level
-        if lvl == 0 or not fresh:
-            continue
-        on, freq, n, on_ms, pause, interval, maxrep = _cfg(C, lvl)
-        if not on or (maxrep and S.count >= maxrep) or SOUND.locked():
-            continue
-        if S.last_beep is None or time.ticks_diff(now, S.last_beep) >= interval:
-            S.last_beep = now
-            S.count += 1
-            asyncio.create_task(beep(dev, C, freq, n, on_ms, pause))
+        if lvl < 2:
+            danger_done = False
+        if lvl == 2 and fresh and C.ALARM2_ON and not danger_done:
+            danger_done = True
+            fx.danger()
+        elif lvl == 1 and fresh and C.ALARM1_ON:
+            if not (C.ALARM1_MAX_REPEAT and S.count >= C.ALARM1_MAX_REPEAT) and \
+                    not fx.busy(fx_mod.P_HIGH) and \
+                    (S.last_beep is None or time.ticks_diff(now, S.last_beep) >= C.ALARM1_INTERVAL_MS):
+                S.last_beep = now
+                S.count += 1
+                fx.high()
+        elif lvl == 0 and fresh and S.connected and not S.dose_active:
+            if time.ticks_diff(now, last_heart) >= C.HEARTBEAT_S * 1000:
+                last_heart = now
+                if C.HEARTBEAT_WHEN_DIM or not S.dimmed:
+                    fx.heartbeat()

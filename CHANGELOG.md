@@ -1,5 +1,25 @@
 # Changelog
 
+## v2.0.0-dev2 – 2026-10-17 (in development, stage 2)
+
+- **Splash**: atom with the radiation symbol as core, three orbits and green
+  electrons, "RadZilla", version, copyright; jingle (60 %) with LED flash and
+  vibration on every Geiger click; a tap skips it. Bluetooth search starts
+  meanwhile.
+- **Effects** (`fx.py`): sound, LEDs and vibration in sync, one at a time by
+  priority DANGER > DOSE > HIGH > Geiger > heartbeat.
+  - DANGER: siren (3 bursts) once per alarm event, red run + vibration per burst
+  - DOSE: siren (~6 s) once, LEDs pulse red with the pitch, vibration at start/end
+  - HIGH: beep + yellow run + vibration (max. 3x, every 10 s)
+  - Geiger pre-warning at 80 %: clicks with orange LED flicker
+  - normal: green run every 30 s (also while dimmed)
+  - LED_MODE "run" (centre -> ends) or "blink"; all times/levels in config.py
+- Sounds as WAV files in `radzilla/sounds/`, played from RAM with
+  `Speaker.playWav()` – `playWavFile()` blocks the program for the whole sound
+  (tools/rz_wav_test.py). Generators in `tools/sound_src/`.
+- **Autostart** with `device/main.py` (boot option 0); hold A while switching
+  on to skip.
+
 ## v2.0.0-dev1 – 2026-10-17 (in development, stage 1)
 
 First version of RadZilla M5 for the M5Stack Core2 (UIFlow 2.5.3).

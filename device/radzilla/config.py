@@ -7,7 +7,7 @@
 # ⚠ Experimental: thresholds and conversion factor are not calibrated –
 #   see NOTICE.md. Not a safety device.
 
-VERSION = "2.0.0-dev1"
+VERSION = "2.0.0-dev2"
 DEVICE = "core2"            # hardware module in devices/ (later also "stopwatch")
 DIAG = False                # True: print a status line to the shell every 5 s
 
@@ -73,8 +73,40 @@ RING_WARN_PCT = 80
 BACKGROUND_USV = 0.15
 DAILY_BUDGET_USV = 2.7
 
-# --- Sounds (stage 1: simple tones; sirens/LEDs/vibration follow in stage 2) ---------
+# --- Splash (start screen) -----------------------------------------------------------
+SPLASH_ON = True
+SPLASH_SOUND_ON = True
+SPLASH_VOLUME_PCT = 60
+SPLASH_MS = 4100            # length (the jingle lasts 4.0 s); a tap skips it
+SPLASH_CLICKS = (1200, 1425, 1593, 1702, 1742, 2005, 2279, 2399, 2516, 2561,
+                 2639, 2786, 3061, 3105, 3149)   # Geiger clicks in the jingle (ms)
+SPLASH_VIB_LEVEL = 200      # vibration on every click ...
+SPLASH_VIB_MS = 20          # ... and LED flash length
+
+# --- LEDs (10x SK6812 on the M5GO Bottom2) --------------------------------------------
+LED_ON = True
+LED_LEVEL_PCT = 30          # brightness 0..100
+LED_MODE = "run"            # "run" = lights move centre -> ends, "blink" = all at once
+LED_STEP_MS = 80            # speed of the run
+LED_BLINK_MS = 150          # length of a blink (LED_MODE = "blink")
+HEARTBEAT_ON = True         # normal state: short green run every HEARTBEAT_S
+HEARTBEAT_S = 30
+HEARTBEAT_WHEN_DIM = True   # also while the display is dimmed
+LED_GREEN = (0, 255, 0)
+LED_YELLOW = (255, 170, 0)
+LED_ORANGE = (255, 70, 0)
+LED_RED = (255, 0, 0)
+
+# --- Vibration ---------------------------------------------------------------------------
+VIB_ON = True
+VIB_LEVEL = 200             # 0..255
+HIGH_VIB_MS = 150           # with the HIGH beep
+DANGER_VIB_MS = 400         # per DANGER siren burst
+DOSE_VIB_MS = 300           # at start and end of the DOSE siren
+
+# --- Sounds --------------------------------------------------------------------------------
 ALARM_VOLUME_PCT = 100      # speaker volume for alarms (0..100)
+FX_PRELOAD = True           # keep the sirens in RAM (instant start)
 
 ALARM1_ON = True            # HIGH
 ALARM1_FREQ_HZ = 2000
@@ -84,19 +116,15 @@ ALARM1_PAUSE_MS = 100
 ALARM1_INTERVAL_MS = 10000
 ALARM1_MAX_REPEAT = 3       # 0 = unlimited
 
-ALARM2_ON = True            # DANGER
-ALARM2_FREQ_HZ = 3000
-ALARM2_BEEPS = 3
-ALARM2_BEEP_MS = 100
-ALARM2_PAUSE_MS = 100
-ALARM2_INTERVAL_MS = 2000
-ALARM2_MAX_REPEAT = 3       # 0 = unlimited
+ALARM2_ON = True            # DANGER – siren once per alarm event (3 bursts)
+DANGER_SIREN_MS = 5000      # length of siren_danger.wav
+DANGER_BURSTS_MS = (0, 1800, 3600)   # start of the bursts in the WAV
+DANGER_BURST_MS = 1000      # length of one burst
 
-ALARM3_ON = True            # DOSE – plays once per alarm event
-ALARM3_FREQ_HZ = 2500
-ALARM3_BEEPS = 2
-ALARM3_BEEP_MS = 150
-ALARM3_PAUSE_MS = 100
+ALARM3_ON = True            # DOSE – siren once per alarm event
+DOSE_RISE_MS = 2200         # shape of siren_dose.wav (LEDs follow the pitch)
+DOSE_HOLD_MS = 1400
+DOSE_FALL_MS = 2400
 
 GEIGER_ON = True            # clicks once when the dose ring reaches RING_WARN_PCT
 GEIGER_DURATION_MS = 5000

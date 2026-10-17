@@ -26,11 +26,27 @@ it is started by hand from Thonny – nothing is changed on the device
    folder **`radzilla`** → *Upload to /flash*.
 4. On a later update upload the folder again (overwrite).
 
-## 3. Start
+## 3. Start by hand (Thonny)
 
 1. Close the RadiaCode phone app (only one Bluetooth connection at a time).
 2. Open `device/rz_start.py` in Thonny, press **Stop**, then **F5**.
 3. Stop with the **Stop** button – the log buffer is saved.
+
+## 4. Autostart after switching on
+
+1. Boot option 0 (UIFlow then runs only `main.py`, no UIFlow menu) – in the
+   Thonny shell:
+   ```python
+   import esp32; n=esp32.NVS("uiflow"); n.set_u8("boot_option",0); n.commit()
+   ```
+2. On the Core2 rename the old `main.py` to `main_uiflow.py` (backup).
+3. Upload `device/main.py` to `/flash`.
+4. Switch off and on: splash, then RadZilla.
+
+- **Skip once:** hold button **A** while switching on – RadZilla does not
+  start and Thonny can connect normally.
+- **Back to UIFlow:** same command as in step 1 with `1` instead of `0`,
+  and restore `main_uiflow.py` as `main.py`.
 
 ## Controls
 

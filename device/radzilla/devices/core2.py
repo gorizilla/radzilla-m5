@@ -14,6 +14,8 @@
 #   now()                        ((Y, M, D, h, m, s), valid)
 #   set_volume(pct), tone(hz, ms)
 #   vibrate(level)               vibration motor 0..255
+#   leds(colors)                 LED bar(s), list of (r, g, b)
+#   play_wav(data, pct), stop_sound()  WAV from RAM, plays in the background
 #   accel()                      (x, y, z) in g or None
 #   sd_mounted                   True if the microSD card is usable
 #   poll()                       list of input events, see EV_*
@@ -44,6 +46,13 @@ class Device:
         Lcd.fillScreen(0x000000)        # first LCD access initialises the shared SPI bus
         self.sd_mounted = self._mount_sd()
         self._vol = None
+        import machine
+        self._led_pin = machine.Pin(25, machine.Pin.OUT)
+        try:
+            from M5 import Speaker
+            Speaker.begin()
+        except Exception:
+            pass
         # touch gesture state
         self._down = None               # (t, x, y) at touch start
         self._last = None               # last (x, y) while touching
@@ -113,6 +122,35 @@ class Device:
             Power.setVibration(int(level))
         except Exception as e:
             print("core2: vibration:", repr(e))
+
+    def leds(self, colors):
+        """10 SK6812 LEDs of the M5GO Bottom2 (G25), colours (r, g, b) 0..255,
+        scaled by LED_LEVEL_PCT. Numbered clockwise, 0..4 one side, 5..9 other."""
+        k = self.c.LED_LEVEL_PCT / 100
+        buf = bytearray()
+        for r, g, b in colors:
+            buf += bytes((int(g * k), int(r * k), int(b * k)))   # GRB order
+        try:
+            import machine
+            machine.bitstream(self._led_pin, 0, (400, 850, 800, 450), buf)
+        except Exception as e:
+            print("core2: leds:", repr(e))
+
+    def play_wav(self, data, vol_pct):
+        """Play WAV data from RAM in the background (keep data referenced)."""
+        from M5 import Speaker
+        self.set_volume(vol_pct)
+        try:
+            Speaker.playWav(data, 1, 0, True)
+        except Exception as e:
+            print("core2: playWav:", repr(e))
+
+    def stop_sound(self):
+        from M5 import Speaker
+        try:
+            Speaker.stop()
+        except Exception:
+            pass
 
     def accel(self):
         from M5 import Imu

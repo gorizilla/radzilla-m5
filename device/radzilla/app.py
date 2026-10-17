@@ -24,7 +24,8 @@ from radzilla import config as C
 from radzilla.core import state as st
 from radzilla.core import trend, dose, alarms
 from radzilla.core.logger import Logger
-from radzilla.ui import gfx
+from radzilla import fx
+from radzilla.ui import gfx, splash
 
 
 def _load_device():
@@ -183,6 +184,7 @@ class Light:
 
 
 LIGHT = None
+FX = None
 DIAG = {"draws": 0, "last_ms": 0, "max_ms": 0}
 
 
@@ -217,6 +219,10 @@ async def light_task():
     while True:
         await asyncio.sleep_ms(200)
         LIGHT.check()
+        if S.wake:                           # alarm effect asks to wake the display
+            S.wake = False
+            LIGHT.wake()
+        S.dimmed = LIGHT.dimmed
         if not C.WAKE_ON_PICKUP:
             continue
         a = DEV.accel()
@@ -254,6 +260,10 @@ async def input_task():
     while True:
         try:
             for e in DEV.poll():
+                if splash.active():          # any touch / button skips the splash
+                    if e == "active":
+                        splash.skip()
+                    continue
                 if e == "active":
                     LIGHT.wake()
                 elif e == "next":
@@ -392,20 +402,26 @@ async def rc_loop():
 
 # ---------- start -----------------------------------------------------------------------------
 async def main():
-    global DEV, LOG, PAGES, LIGHT
+    global DEV, LOG, PAGES, LIGHT, FX
     DEV = _load_device()
     PAGES = _load_pages(DEV.LAYOUT)
     LOG = Logger(C, DEV.sd_mounted)
     LIGHT = Light()
+    FX = fx.FX(DEV, C)
     print("RadZilla M5 v%s on %s, log: %s" % (C.VERSION, DEV.NAME, LOG.dir))
-    asyncio.create_task(display_task())
+    rc = asyncio.create_task(rc_loop())      # Bluetooth search runs during the splash
     asyncio.create_task(input_task())
+    await splash.run(DEV, C, "V" + C.VERSION.upper())
+    PAGES.invalidate()
+    S.dirty = True
+    asyncio.create_task(display_task())
     asyncio.create_task(light_task())
     asyncio.create_task(log_task())
-    asyncio.create_task(alarms.task(DEV, S, C))
+    asyncio.create_task(FX.task())
+    asyncio.create_task(alarms.task(FX, S, C))
     if C.DIAG:
         asyncio.create_task(diag_task())
-    await rc_loop()
+    await rc
 
 
 def run():
@@ -416,4 +432,11 @@ def run():
     finally:
         if LOG is not None:
             LOG.flush()                      # save the log buffer
+        if DEV is not None:                  # LEDs, vibration and sound off
+            try:
+                DEV.leds([(0, 0, 0)] * 10)
+                DEV.vibrate(0)
+                DEV.stop_sound()
+            except Exception:
+                pass
         asyncio.new_event_loop()
