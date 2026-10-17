@@ -27,7 +27,7 @@ RadiaCode devices or with M5Stack.
   today (blue).
 - **Controls**: double tap or swipe on the display, buttons A / C = page,
   B = DOSE page, hold B = Bluetooth off / on.
-- **Auto-dim** after 90 s, wakes on touch, picking up or an alarm.
+- **Auto-dim** after 90 s, wakes on touch, buttons or an alarm.
 - **CSV log** on the microSD card (fallback: internal flash), 7 days.
 - **Splash**, synced **sirens / LEDs / vibration**, **autostart**.
 - **SET page**: WiFi via on-screen keyboard or phone, time sync with the

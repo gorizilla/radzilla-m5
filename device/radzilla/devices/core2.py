@@ -146,10 +146,11 @@ class Device:
         except Exception as e:
             print("core2: vibration:", repr(e))
 
-    def leds(self, colors):
+    def leds(self, colors, level_pct=None):
         """10 SK6812 LEDs of the M5GO Bottom2 (G25), colours (r, g, b) 0..255,
-        scaled by LED_LEVEL_PCT. Numbered clockwise, 0..4 one side, 5..9 other."""
-        k = self.c.LED_LEVEL_PCT / 100
+        scaled by level_pct (default LED_LEVEL_PCT). Numbered clockwise,
+        0..4 one side, 5..9 other side."""
+        k = (self.c.LED_LEVEL_PCT if level_pct is None else level_pct) / 100
         buf = bytearray()
         for r, g, b in colors:
             buf += bytes((int(g * k), int(r * k), int(b * k)))   # GRB order

@@ -33,7 +33,7 @@ class FX:
         self.c = cfg
         self.cur = None             # (prio, start ticks, frame function, length ms)
         self.wav = {}               # name -> bytes (kept while playing / preloaded)
-        self.last_leds = None
+        self.last_leds = None         # (colours, level) last sent
         self.last_vib = None
         self.geiger_clicks = []
         if cfg.FX_PRELOAD:
@@ -178,9 +178,11 @@ class FX:
             leds = [OFF] * N_LED
         if not self.c.VIB_ON:
             vib = 0
-        if leds != self.last_leds:
-            self.last_leds = leds
-            self.dev.leds(leds)
+        cur = self.cur
+        level = self.c.LED_ALARM_LEVEL_PCT if (cur and cur[0] >= P_GEIGER) else self.c.LED_LEVEL_PCT
+        if (leds, level) != self.last_leds:
+            self.last_leds = (leds, level)
+            self.dev.leds(leds, level)
         if vib != self.last_vib:
             self.last_vib = vib
             self.dev.vibrate(vib)

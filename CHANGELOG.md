@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.0.0-dev4 – 2026-10-17 (in development)
+
+- Display brightness 140, dimmed 30 (after 90 s).
+- Waking the display by picking it up is off (`WAKE_ON_PICKUP`); touch,
+  buttons and alarms still wake it.
+- LEDs: 50 % for the heartbeat run and the splash, 80 % for alarms
+  (`LED_ALARM_LEVEL_PCT`); heartbeat every 20 s, run slower (110 ms per step).
+
 ## v2.0.0-dev3 – 2026-10-17 (in development, stage 3)
 
 - **SET page**: stored WiFi networks (max. 5), time status, buttons
@@ -63,7 +71,8 @@ First version of RadZilla M5 for the M5Stack Core2 (UIFlow 2.5.3).
 - Touch controls (double tap, swipe), buttons A / B / C; holding B for 2 s
   switches Bluetooth to the RadiaCode off / on (confirmation text +
   vibration, always on after a restart).
-- Brightness 150, auto-dim to 40 after 90 s, wake on touch / pick-up / alarm.
+- Brightness 150, auto-dim to 40 after 90 s, wake on touch / pick-up / alarm
+  (changed in dev4).
 - CSV log on microSD (`/sd/RadZilla/logs/`, fallback flash), new columns
   Lat;Lon;Alt for GPS, 7 days / 25 MB.
 - Hardware and design test scripts in `tools/`.

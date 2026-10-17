@@ -7,16 +7,16 @@
 # ⚠ Experimental: thresholds and conversion factor are not calibrated –
 #   see NOTICE.md. Not a safety device.
 
-VERSION = "2.0.0-dev3"
+VERSION = "2.0.0-dev4"
 DEVICE = "core2"            # hardware module in devices/ (later also "stopwatch")
 DIAG = False                # True: print a status line to the shell every 5 s
 
 # --- Display -------------------------------------------------------------------
-BRIGHTNESS = 150            # 0..255
+BRIGHTNESS = 140            # 0..255
 DIM_ON = True               # dim after DIM_AFTER_S without any action
 DIM_AFTER_S = 90
-DIM_BRIGHTNESS = 40
-WAKE_ON_PICKUP = True       # picking the device up wakes the display (motion sensor)
+DIM_BRIGHTNESS = 30
+WAKE_ON_PICKUP = False      # True: picking the device up wakes the display (motion sensor)
 PICKUP_G = 0.15             # change of acceleration that counts as "picked up"
 REDRAW_MS = 100             # check for redraws this often
 
@@ -86,12 +86,13 @@ SPLASH_VIB_MS = 20          # ... and LED flash length
 
 # --- LEDs (10x SK6812 on the M5GO Bottom2) --------------------------------------------
 LED_ON = True
-LED_LEVEL_PCT = 30          # brightness 0..100
+LED_LEVEL_PCT = 50          # brightness 0..100: heartbeat run, splash
+LED_ALARM_LEVEL_PCT = 80    # brightness 0..100: HIGH / DANGER / DOSE / Geiger
 LED_MODE = "run"            # "run" = lights move centre -> ends, "blink" = all at once
-LED_STEP_MS = 80            # speed of the run
+LED_STEP_MS = 110           # speed of the run (per step)
 LED_BLINK_MS = 150          # length of a blink (LED_MODE = "blink")
 HEARTBEAT_ON = True         # normal state: short green run every HEARTBEAT_S
-HEARTBEAT_S = 30
+HEARTBEAT_S = 20
 HEARTBEAT_WHEN_DIM = True   # also while the display is dimmed
 LED_GREEN = (0, 255, 0)
 LED_YELLOW = (255, 170, 0)
