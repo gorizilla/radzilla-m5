@@ -7,7 +7,7 @@
 # ⚠ Experimental: thresholds and conversion factor are not calibrated –
 #   see NOTICE.md. Not a safety device.
 
-VERSION = "2.0.0-dev6"
+VERSION = "2.0.0-dev7"
 DEVICE = "core2"            # hardware module in devices/ (later also "stopwatch")
 DIAG = False                # True: print a status line to the shell every 5 s
 
@@ -171,11 +171,13 @@ PORTAL_TIMEOUT_S = 300      # phone setup closes after this time
 # Time;uSv/h;CPS;Alarm;Dose15;Lat;Lon;Alt  (Lat/Lon/Alt stay empty until GPS, stage 4)
 #   Alarm 0 none, 1 HIGH, 2 DANGER, 3 DOSE (state, DANGER > DOSE > HIGH)
 # Semicolon + decimal comma -> opens directly in German Numbers/Excel.
-LOG_ON = True
+# Log on / off with the LOG button on the SET page; not stored, off after every start.
+# A line every LOG_INTERVAL_S seconds and immediately when an alarm starts or ends.
+LOG_ON = False
 SD_FREQ = 4_000_000          # microSD bus clock (shared with the display)
 LOG_SD_DIR = "/sd/RadZilla/logs"        # microSD (FAT32)
 LOG_INT_DIR = "/flash/RadZilla/logs"    # fallback without SD card
-LOG_INTERVAL_S = 3
+LOG_INTERVAL_S = 5
 LOG_FLUSH_S = 60            # buffered, written every 60 s
 LOG_FILE_H = 24             # new file after this run time
 LOG_MAX_AGE_H = 168         # 7 days – older files are deleted

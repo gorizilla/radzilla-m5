@@ -163,6 +163,7 @@ def build_view():
     v.footer_r, v.footer_r_col = txt, gfx.GREY if ok else gfx.RED
 
     v.wifi = [s for s, _ in NETS]
+    v.log_on = C.LOG_ON
     v.wifi_max = C.WIFI_MAX
     if SYNC["busy"]:
         v.sync_txt, v.sync_col = "SYNCING ...", gfx.YELLOW
@@ -409,6 +410,12 @@ def _scan():
 
 async def set_action(name):
     global NETS
+    if name == "log":                    # log on / off, not stored (off after a restart)
+        C.LOG_ON = not C.LOG_ON
+        if not C.LOG_ON:
+            LOG.flush()
+        S.dirty = True
+        return
     if name == "sync":
         if not NETS:
             S.show_overlay(["NO NETWORK SAVED"], 1500)
@@ -487,8 +494,18 @@ async def _phone_setup(g, dlg):
 
 # ---------- log -----------------------------------------------------------------------------
 async def log_task():
+    """A line every LOG_INTERVAL_S and immediately when an alarm starts or ends."""
+    last = time.ticks_ms()
+    last_alarm = S.log_alarm()
     while True:
-        await asyncio.sleep_ms(C.LOG_INTERVAL_S * 1000)
+        await asyncio.sleep_ms(250)
+        alarm = S.log_alarm()
+        due = time.ticks_diff(time.ticks_ms(), last) >= C.LOG_INTERVAL_S * 1000
+        if not due and alarm == last_alarm:
+            continue
+        last, last_alarm = time.ticks_ms(), alarm
+        if not C.LOG_ON:
+            continue
         t, valid = DEV.now()
         if valid and S.connected and S.fresh(C.RC_STALE_MS):
             was = LOG.full, LOG.error

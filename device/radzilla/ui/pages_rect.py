@@ -85,9 +85,9 @@ def _static_dose(g, v):
 
 
 # SET page: tap targets (name -> x, y, w, h), used by app.py for hit tests
-SET_BUTTONS = {"add": (16, 172, 92, 26), "phone": (114, 172, 92, 26),
-               "sync": (212, 172, 92, 26)}
-SET_LABELS = {"add": "+ WIFI", "phone": "PHONE", "sync": "SYNC"}
+SET_BUTTONS = {"add": (12, 172, 68, 26), "phone": (88, 172, 68, 26),
+               "sync": (164, 172, 68, 26), "log": (240, 172, 68, 26)}
+SET_LABELS = {"add": "+WIFI", "phone": "PHONE", "sync": "SYNC"}   # "log": colour = state
 
 
 def set_button_at(x, y):
@@ -102,8 +102,9 @@ def _static_set(g, v):
     gfx.text(g, "WIFI", 22, 64, GREY)
     gfx.text(g, "TIME", 22, 148, GREY)
     for name, (x, y, w, h) in SET_BUTTONS.items():
-        g.drawRect(x, y, w, h, YELLOW)
-        gfx.text(g, SET_LABELS[name], x + w // 2, y + 6, YELLOW, align="center")
+        if name in SET_LABELS:
+            g.drawRect(x, y, w, h, YELLOW)
+            gfx.text(g, SET_LABELS[name], x + w // 2, y + 6, YELLOW, align="center")
 
 
 def _dyn_set(g, v):
@@ -121,6 +122,12 @@ def _dyn_set(g, v):
     if _changed("sync", (v.sync_txt, v.sync_col)):
         _clear(g, 76, 148, 230)
         gfx.text(g, v.sync_txt[:19], 306, 148, v.sync_col, align="right")
+    if _changed("logbtn", v.log_on):                    # LOG green = on, grey = off
+        x, y, w, h = SET_BUTTONS["log"]
+        col = GREEN if v.log_on else GREY
+        g.fillRect(x, y, w, h, BG)
+        g.drawRect(x, y, w, h, col)
+        gfx.text(g, "LOG", x + w // 2, y + 6, col, align="center")
 
 
 # ---------- dynamic parts (redrawn on change) ---------------------------------------------

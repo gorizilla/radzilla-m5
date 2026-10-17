@@ -1,7 +1,12 @@
 # Changelog
 
-## next
+## v2.0.0-dev7 – 2026-10-17 (in development)
 
+- **Log off by default**: fourth button `LOG` on the SET page, green = on,
+  grey = off (footer `LOG SD` / `LOG OFF`); not stored, off after every
+  start. The SET buttons are narrower: `+WIFI`, `PHONE`, `SYNC`, `LOG`.
+- Log interval 5 s (was 3 s); an extra line immediately when an alarm starts
+  or ends.
 - Status bar: radiation symbol and "RC 100%" 16 px further left (touched the
   battery icon at 100 %), device battery icon 4 px further right.
 - Radiation symbol in the status bar: grey without RadiaCode connection,
