@@ -130,14 +130,16 @@ def _dyn_chrome(g, v):
     if _changed("rc", v.rc_txt):
         _clear(g, 152, 5, 80)
         gfx.text(g, v.rc_txt, 152, 5, GREY)
-    if _changed("batt", (v.batt_pct, v.batt_col)):
+    if _changed("batt", (v.batt_txt, v.batt_mode, v.batt_col)):
         g.fillRect(236, 7, 19, 10, BG)
         _clear(g, 262, 5, 50)
-        if v.batt_pct is not None:
+        if v.batt_mode in ("chg", "full"):              # cable: lightning bolt
+            col = YELLOW if v.batt_mode == "chg" else GREEN
+            g.fillTriangle(247, 7, 239, 12, 246, 12, col)
+            g.fillTriangle(244, 11, 251, 11, 243, 16, col)
+        elif v.batt_pct is not None:
             g.fillRect(236, 7, max(1, min(19, int(19 * v.batt_pct / 100 + 0.5))), 10, v.batt_col)
-            gfx.text(g, "%d%%" % v.batt_pct, 312, 5, GREY, align="right")
-        else:
-            gfx.text(g, "--", 312, 5, GREY, align="right")
+        gfx.text(g, v.batt_txt, 312, 5, GREY, align="right")
     if _changed("state", (v.state_txt, v.state_col)):
         _clear(g, 230, TAB_Y + 3, 82)
         gfx.text(g, v.state_txt, 312, TAB_Y + 3, v.state_col, align="right")

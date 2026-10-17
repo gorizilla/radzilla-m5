@@ -104,8 +104,14 @@ def build_view():
     t, valid = DEV.now()
     v.time_str = "%02d:%02d" % (t[3], t[4]) if valid else "--:--"
     v.rc_txt = "RC %d%%" % S.batt if (S.connected and S.batt is not None) else "RC --"
-    v.batt_pct, chg = DEV.battery()
-    v.batt_col = gfx.GREEN if (chg or v.batt_pct is None or v.batt_pct > 20) else gfx.RED
+    v.batt_pct, v.batt_mode = DEV.battery()
+    v.batt_col = gfx.GREEN if (v.batt_mode != "bat" or v.batt_pct is None or v.batt_pct > 20) else gfx.RED
+    if v.batt_pct is None:
+        v.batt_txt = "--"
+    elif v.batt_mode == "chg":
+        v.batt_txt = "~%d%%" % v.batt_pct
+    else:
+        v.batt_txt = "%d%%" % v.batt_pct
     v.page = S.page
     v.version = C.VERSION
 

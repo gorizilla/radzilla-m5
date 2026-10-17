@@ -10,7 +10,7 @@
 #   gfx()                        graphics object to draw on
 #   show()                       finish a frame (no-op when drawing directly)
 #   set_brightness(v)            0..255
-#   battery()                    (percent or None, charging True/False/None)
+#   battery()                    (percent or None, "bat" / "chg" / "full")
 #   now()                        ((Y, M, D, h, m, s), valid)
 #   set_volume(pct), tone(hz, ms)
 #   vibrate(level)               vibration motor 0..255
@@ -33,6 +33,20 @@ EV_PREV = "prev"            # previous page (swipe left, A)
 EV_DOSE = "dose"            # B: DOSE page
 EV_HOLD_B = "hold_b"        # B held: Bluetooth off / on
 EV_ACTIVE = "active"        # any touch / button: wakes the display
+
+
+_LIPO = ((4200, 100), (4100, 90), (4000, 80), (3900, 65), (3800, 50), (3750, 40),
+         (3700, 30), (3650, 20), (3600, 10), (3500, 5), (3300, 0))
+
+
+def _lipo_pct(mv):
+    """Rough LiPo charge level from the resting voltage (mV)."""
+    if mv >= _LIPO[0][0]:
+        return 100
+    for (v1, p1), (v0, p0) in zip(_LIPO, _LIPO[1:]):
+        if mv >= v0:
+            return int(p0 + (p1 - p0) * (mv - v0) / (v1 - v0) + 0.5)
+    return 0
 
 
 class Device:
@@ -84,17 +98,33 @@ class Device:
 
     # ---------- power / time ----------
     def battery(self):
+        """(percent or None, mode). mode: "bat" on battery, "chg" charging
+        (percent estimated from the voltage minus the charge offset, because
+        the charger lifts the voltage), "full" cable in and charged."""
         from M5 import Power
-        pct = chg = None
-        try:
-            pct = int(Power.getBatteryLevel())
-        except Exception:
-            pass
-        try:
-            chg = bool(Power.isCharging())
-        except Exception:
-            pass
-        return pct, chg
+
+        def call(name):
+            try:
+                return getattr(Power, name)()
+            except Exception:
+                return None
+
+        usb_mv = call("getVBUSVoltage")
+        if usb_mv is not None and 0 < usb_mv < 100:          # some builds return volts
+            usb_mv *= 1000
+        charging = call("isCharging")
+        usb = (usb_mv is not None and usb_mv >= self.c.BAT_USB_MV) or bool(charging)
+        if not usb:
+            pct = call("getBatteryLevel")
+            return (int(pct) if pct is not None else None), "bat"
+        if not charging:
+            return 100, "full"
+        mv = call("getBatteryVoltage")
+        if mv is None:
+            return None, "chg"
+        if mv < 100:
+            mv *= 1000
+        return _lipo_pct(mv - self.c.BAT_CHG_COMP_MV), "chg"
 
     def now(self):
         """German local time from the clock (which runs in UTC):

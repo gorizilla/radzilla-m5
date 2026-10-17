@@ -7,7 +7,7 @@
 # ⚠ Experimental: thresholds and conversion factor are not calibrated –
 #   see NOTICE.md. Not a safety device.
 
-VERSION = "2.0.0-dev4"
+VERSION = "2.0.0-dev5"
 DEVICE = "core2"            # hardware module in devices/ (later also "stopwatch")
 DIAG = False                # True: print a status line to the shell every 5 s
 
@@ -19,6 +19,12 @@ DIM_BRIGHTNESS = 30
 WAKE_ON_PICKUP = False      # True: picking the device up wakes the display (motion sensor)
 PICKUP_G = 0.15             # change of acceleration that counts as "picked up"
 REDRAW_MS = 100             # check for redraws this often
+
+# --- Device battery ---------------------------------------------------------------
+# With the cable the charger lifts the voltage, so the level is estimated:
+# voltage minus BAT_CHG_COMP_MV, shown as "~64%" with a yellow bolt.
+BAT_USB_MV = 4000           # USB voltage above this = cable connected
+BAT_CHG_COMP_MV = 150       # voltage offset while charging (estimate)
 
 # --- Touch / buttons -----------------------------------------------------------
 # Double tap on the display or swipe = next / previous page,
