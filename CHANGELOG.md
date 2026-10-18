@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.0.0-dev16 – 2026-10-18 (in development)
+
+- Fix: with dev15 no readings arrived although connected (the zero filter
+  skipped every valid reading).
+
 ## v2.0.0-dev15 – 2026-10-18 (in development)
 
 - **Year dose** on the DOSE page: every 20 s the symbol is replaced for 5 s

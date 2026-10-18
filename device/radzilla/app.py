@@ -710,6 +710,7 @@ async def rc_loop():
                 d = await rc.read_data()
                 if "cps" in d and d["cps"] == 0 and d["dose_raw"] == 0:
                     del d["cps"]                 # empty record from the RC: keep the last value
+                if "cps" in d:
                     S.cps = d["cps"]
                     S.usv = d["dose_raw"] * C.RC_DOSE_FACTOR
                     S.last_ms = time.ticks_ms()
