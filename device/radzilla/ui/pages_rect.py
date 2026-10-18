@@ -15,7 +15,8 @@
 #   * 7-segment digits, ring, symbol -> painted over completely (no clearing)
 #   * small texts -> their field is cleared, then written again
 from radzilla.ui import gfx
-from radzilla.ui.gfx import (BG, WHITE, GREY, DARK, YELLOW, YELLOW_DIM, BLUE, GREEN, ORANGE)
+from radzilla.ui.gfx import (BG, WHITE, GREY, DARK, YELLOW, YELLOW_DIM, BLUE, GREEN, ORANGE,
+                             VIOLET)
 
 W, H = 320, 240
 TABS = ("RATE", "CPS", "DOSE", "SET")
@@ -195,7 +196,18 @@ def _dyn_rate(g, v):
 def _dyn_dose(g, v):
     if _changed("dring", (v.d_frac_seg, v.d_col)):
         gfx.seg_ring(g, DOSE_CX, GAUGE_CY, 56, 66, v.d_frac, v.d_col)
-    if _changed("dsym", v.d_col):
+    if _changed("yshow", v.y_show):                     # symbol <-> year dose
+        g.fillCircle(DOSE_CX, GAUGE_CY, 37, BG)
+        _prev.pop("dsym", None)
+        _prev.pop("year", None)
+    if v.y_show:                                        # thin violet ring + value
+        if _changed("year", (v.y_txt, v.y_unit, int(v.y_frac * 360))):
+            g.fillCircle(DOSE_CX, GAUGE_CY, 37, BG)
+            if v.y_frac > 0:
+                gfx.arc(g, DOSE_CX, GAUGE_CY, 33, 36, -90, -90 + max(4, 360 * v.y_frac), VIOLET)
+            gfx.text(g, v.y_txt, DOSE_CX, GAUGE_CY - 14, VIOLET, align="center")
+            gfx.text(g, v.y_unit, DOSE_CX, GAUGE_CY + 4, VIOLET, align="center")
+    elif _changed("dsym", v.d_col):
         gfx.trefoil(g, DOSE_CX, GAUGE_CY, 28, v.d_col)
     if _changed("ering", v.e_frac_seg):
         gfx.seg_ring(g, DOSE_CX, GAUGE_CY, 42, 50, v.e_frac, BLUE, n=24)

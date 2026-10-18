@@ -41,6 +41,8 @@ class State:
         self.dose_hist = []         # (ticks_ms, µSv increment) within the window
         self.dose_total = 0.0       # µSv within the window
         self.extra_total = 0.0      # µSv above background since switching on
+        self.year = None            # year of the year dose (None = unknown)
+        self.year_usv = 0.0         # µSv this calendar year (yeardose.json)
         self.last_rd_ms = None      # previous reading (None = gap)
         self.dose_active = False
         self.geiger_armed = True

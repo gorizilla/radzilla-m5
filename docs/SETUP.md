@@ -67,6 +67,14 @@ once its beeps / siren are over. The colour follows the dose rate:
 green up to 0.12 µSv/h, slightly yellow-green up to 0.18, towards yellow
 up to 0.20; HIGH yellow -> orange -> nearly red up to 10; DANGER and DOSE red.
 
+### Year dose (DOSE page)
+
+Every 20 s the radiation symbol in the centre is replaced for 5 s by a thin
+violet ring with the total dose of this calendar year (incl. background, in
+µSv, from 1000 µSv in mSv); the ring is full at 1 mSv. Counted while
+connected to the RadiaCode, stored in `/flash/radzilla/yeardose.json`
+(every 10 min and when stopping / switching off), reset at the new year.
+
 ### Counter clicks
 
 Clicks with the count rate, only on the CPS page – usable as a source
@@ -136,8 +144,9 @@ import json; print([n["ssid"] for n in json.load(open("/flash/radzilla/wifi.json
 ## Log files
 
 The log is on after every start; switch it off with `LOG` on the SET page.
-A line every 5 s (`LOG_INTERVAL_S`) and immediately when an alarm starts or
-ends; written to the card once per minute.
+A line every 5 s on the clock (:00, :05, ...) and immediately when an alarm
+starts or ends; written to the card once per minute. uSv/h and Dose15 with
+3 decimals.
 
 `/sd/RadZilla/logs/rc_YYYY-MM-DD_HHMM.csv`, without SD card
 `/flash/RadZilla/logs/`. Semicolon + decimal comma – opens directly in

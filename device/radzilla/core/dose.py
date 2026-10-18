@@ -8,17 +8,18 @@ import time
 
 
 def add(S, C, usv, now):
-    """Add the dose of one reading. The time step is limited to 2 poll
-    intervals, so gaps (disconnect) count as 0."""
+    """Add the dose of one reading. The time step is limited to RC_STALE_MS,
+    so gaps (disconnect) count as 0."""
     if S.last_rd_ms is None:
         dt = C.RC_POLL_MS
     else:
-        dt = min(time.ticks_diff(now, S.last_rd_ms), 2 * C.RC_POLL_MS)
+        dt = min(time.ticks_diff(now, S.last_rd_ms), C.RC_STALE_MS)
     S.last_rd_ms = now
     inc = usv * dt / 3_600_000                  # µSv/h x ms -> µSv
     S.dose_hist.append((now, inc))
     S.dose_total += inc
     S.extra_total += max(0.0, usv - C.BACKGROUND_USV) * dt / 3_600_000
+    S.year_usv += inc
     trim(S, C, now)
 
 

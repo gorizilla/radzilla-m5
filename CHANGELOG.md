@@ -1,5 +1,19 @@
 # Changelog
 
+## v2.0.0-dev15 – 2026-10-18 (in development)
+
+- **Year dose** on the DOSE page: every 20 s the symbol is replaced for 5 s
+  by a thin violet ring + value (whole measured dose this calendar year,
+  µSv / mSv, ring full at 1 mSv). Stored in `/flash/radzilla/yeardose.json`
+  (every 10 min and when stopping / switching off), reset at the new year.
+- Faster readings: RadiaCode read every 0.5 s (`RC_POLL_MS`, was 1 s) – the
+  RadiaCode updates its values every 0.5 s.
+- Counter clicks in 0.5 s chunks (`CLICK_CHUNK_MS`, adjustable).
+- Fix: empty RadiaCode records (rate and CPS exactly 0) are ignored.
+- Fix: the dose gap limit no longer depends on the poll interval.
+- Log: lines on a fixed 5 s grid of the clock; uSv/h and Dose15 with
+  3 decimals.
+
 ## v2.0.0-dev14 – 2026-10-18 (in development)
 
 - Counter clicks louder (tested on the device): volume 50 -> 80 %,

@@ -27,6 +27,7 @@ from radzilla.core.logger import Logger
 from radzilla import fx
 from radzilla import clicker
 from radzilla.core import settings
+from radzilla.core import yeardose
 from radzilla.core import timesync, wificfg
 from radzilla.ui import gfx, splash
 
@@ -152,6 +153,14 @@ def build_view():
     v.d_pct_txt, v.e_pct_txt = fmt_pct(p), fmt_pct(e)
     v.d_col = DOSE_COL[dose.stage(S, C)]
     v.d_usv, v.e_usv = "%.2f" % S.dose_total, "%.2f" % S.extra_total
+    # year dose: shown for YEAR_SHOW_S after YEAR_HIDE_S instead of the symbol
+    cyc = C.YEAR_HIDE_S + C.YEAR_SHOW_S
+    v.y_show = C.YEAR_ON and (time.ticks_ms() // 1000) % cyc >= C.YEAR_HIDE_S
+    v.y_frac = min(1.0, S.year_usv / C.YEAR_FULL_USV) if C.YEAR_FULL_USV else 0.0
+    if S.year_usv < 999.5:
+        v.y_txt, v.y_unit = fmt3(S.year_usv), "uSv"
+    else:
+        v.y_txt, v.y_unit = fmt3(min(S.year_usv / 1000, 999)), "mSv"
     v.d_lim, v.e_lim = "%g" % C.DOSE_LIMIT_USV, "%g" % C.DAILY_BUDGET_USV
     v.window_min = C.DOSE_WINDOW_MIN
 
@@ -218,6 +227,7 @@ BATT = [None, "bat"]                    # device battery (pct, mode), read every
 async def display_task():
     last_min = None
     last_clock = None
+    last_phase = None
     while True:
         now = time.ticks_ms()
         if last_clock is None or time.ticks_diff(now, last_clock) >= 1000:
@@ -226,6 +236,12 @@ async def display_task():
             if t[4] != last_min:             # minute changed
                 last_min = t[4]
                 S.dirty = True
+            if S.page == st.PAGE_DOSE:       # year dose fades in / out
+                cyc = C.YEAR_HIDE_S + C.YEAR_SHOW_S
+                ph = (now // 1000) % cyc >= C.YEAR_HIDE_S
+                if ph != last_phase:
+                    last_phase = ph
+                    S.dirty = True
         if S.overlay is not None and time.ticks_diff(S.overlay_until, time.ticks_ms()) <= 0:
             S.dirty = True                   # overlay expired
         if S.modal:                          # a SET dialog owns the display
@@ -281,6 +297,32 @@ async def _vibrate(ms):
     DEV.vibrate(0)
 
 
+def save_year():
+    if S.year is not None:
+        yeardose.save(S.year, S.year_usv)
+
+
+async def year_task():
+    """Year dose: start / reset with the valid clock, save every YEAR_SAVE_S."""
+    last_save = time.ticks_ms()
+    saved = S.year_usv
+    while True:
+        await asyncio.sleep_ms(10000)
+        t, valid = DEV.now()
+        if valid and S.year != t[0]:
+            if S.year is not None:
+                print("New year %d: year dose %.1f uSv -> 0" % (t[0], S.year_usv))
+                S.year_usv = 0.0
+            S.year = t[0]
+            save_year()
+            saved, last_save = S.year_usv, time.ticks_ms()
+        if time.ticks_diff(time.ticks_ms(), last_save) >= C.YEAR_SAVE_S * 1000:
+            last_save = time.ticks_ms()
+            if S.year_usv != saved:
+                saved = S.year_usv
+                save_year()
+
+
 def toggle_click():
     """Counter clicks on / off (stored); confirmation: one short vibration."""
     S.click_on = not S.click_on
@@ -321,6 +363,7 @@ async def power_task():
         if C.LOG_ON and valid and S.connected and S.fresh(C.RC_STALE_MS):
             LOG.add(t, S.usv, S.cps, S.log_alarm(), S.dose_total)
         LOG.flush()
+        save_year()
         DEV.stop_sound()
         DEV.vibrate(0)
         DEV.leds([(0, 0, 0)] * 10)
@@ -554,19 +597,23 @@ async def _phone_setup(g, dlg):
 
 # ---------- log -----------------------------------------------------------------------------
 async def log_task():
-    """A line every LOG_INTERVAL_S and immediately when an alarm starts or ends."""
-    last = time.ticks_ms()
+    """A line every LOG_INTERVAL_S on the clock (:00, :05, ...) and
+    immediately when an alarm starts or ends."""
+    last_s = None
     last_alarm = S.log_alarm()
     while True:
-        await asyncio.sleep_ms(250)
+        await asyncio.sleep_ms(200)
         alarm = S.log_alarm()
-        due = time.ticks_diff(time.ticks_ms(), last) >= C.LOG_INTERVAL_S * 1000
+        t, valid = DEV.now()
+        sec = (t[3] * 60 + t[4]) * 60 + t[5]
+        due = sec % C.LOG_INTERVAL_S == 0 and sec != last_s
         if not due and alarm == last_alarm:
             continue
-        last, last_alarm = time.ticks_ms(), alarm
+        if due:
+            last_s = sec
+        last_alarm = alarm
         if not C.LOG_ON:
             continue
-        t, valid = DEV.now()
         if valid and S.connected and S.fresh(C.RC_STALE_MS):
             was = LOG.full, LOG.error
             LOG.add(t, S.usv, S.cps, S.log_alarm(), S.dose_total)
@@ -661,7 +708,8 @@ async def rc_loop():
             _set_status(st.ST_CONNECTED, True)
             while rc.is_connected() and S.bt_on:
                 d = await rc.read_data()
-                if "cps" in d:
+                if "cps" in d and d["cps"] == 0 and d["dose_raw"] == 0:
+                    del d["cps"]                 # empty record from the RC: keep the last value
                     S.cps = d["cps"]
                     S.usv = d["dose_raw"] * C.RC_DOSE_FACTOR
                     S.last_ms = time.ticks_ms()
@@ -696,6 +744,12 @@ async def main():
     LOG = Logger(C, DEV.sd_mounted)
     BATT[0], BATT[1] = DEV.battery()
     SETTINGS.update(settings.load(C))
+    S.year, S.year_usv = yeardose.load()
+    t, valid = DEV.now()
+    if valid and S.year is not None and S.year != t[0]:
+        S.year_usv = 0.0                     # stored dose is from an old year
+    if valid:
+        S.year = t[0]
     S.click_on = bool(SETTINGS.get("click"))
     LIGHT = Light()
     FX = fx.FX(DEV, C)
@@ -712,6 +766,7 @@ async def main():
     asyncio.create_task(alarms.task(FX, S, C))
     asyncio.create_task(sync_task())
     asyncio.create_task(power_task())
+    asyncio.create_task(year_task())
     asyncio.create_task(clicker.Clicker(DEV, C).task(S, FX, LIGHT, st.PAGE_CPS))
     if C.DIAG:
         asyncio.create_task(diag_task())
@@ -726,6 +781,10 @@ def run():
     finally:
         if LOG is not None:
             LOG.flush()                      # save the log buffer
+        try:
+            save_year()
+        except Exception:
+            pass
         if DEV is not None:                  # LEDs, vibration and sound off
             try:
                 DEV.leds([(0, 0, 0)] * 10)

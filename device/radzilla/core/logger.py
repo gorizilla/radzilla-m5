@@ -5,7 +5,7 @@
 #
 #   /sd/RadZilla/logs/rc_2026-10-17_1401.csv
 #     Time;uSv/h;CPS;Alarm;Dose15;Lat;Lon;Alt
-#     2026-10-17 14:01:03;0,12;8,53;0;0,03;;;
+#     2026-10-17 14:01:05;0,124;8,53;0;0,031;;;
 #
 #   Alarm  0 none, 1 HIGH, 2 DANGER, 3 DOSE (state, DANGER > DOSE > HIGH)
 #   Dose15 dose in µSv within the dose window
@@ -52,8 +52,8 @@ def _parse_name(name):
         return None
 
 
-def _num(v):
-    return ("%.2f" % v).replace(".", ",")
+def _num(v, dec=2):
+    return ("%.*f" % (dec, v)).replace(".", ",")
 
 
 def _opt(v, fmt):
@@ -198,8 +198,8 @@ class Logger:
                 self.flush()
                 self._new_file(t)
             self.buf.append("%04d-%02d-%02d %02d:%02d:%02d;%s;%s;%d;%s;%s;%s;%s\n" % (
-                t[0], t[1], t[2], t[3], t[4], t[5], _num(usv), _num(cps), alarm,
-                _num(dose), _opt(lat, "%.6f"), _opt(lon, "%.6f"), _opt(alt, "%.1f")))
+                t[0], t[1], t[2], t[3], t[4], t[5], _num(usv, 3), _num(cps), alarm,
+                _num(dose, 3), _opt(lat, "%.6f"), _opt(lon, "%.6f"), _opt(alt, "%.1f")))
             now = time.ticks_ms()
             if time.ticks_diff(now, self.last_flush) >= self.c.LOG_FLUSH_S * 1000:
                 self.flush()

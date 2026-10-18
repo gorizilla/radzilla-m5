@@ -21,6 +21,7 @@ GREEN = 0x28DC5A         # normal
 ORANGE = 0xFF8C00        # dose ring warning stage
 RED = 0xFF3030           # DANGER / DOSE
 BLUE = 0x3C96FF          # extra dose today
+VIOLET = 0xB04CFF        # year dose
 
 # ---------- 5x7 dot-matrix font -------------------------------------------------------
 _F57 = {
