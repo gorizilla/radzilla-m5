@@ -1,7 +1,7 @@
 # rz_ble_test.py – Bluetooth connection test RadiaCode <-> M5Stack Core2 (UIFlow 2)
 #
-# RadZilla – external display for RadiaCode
-# Copyright (c) 2026 Shimizilla – licensed under CC BY-NC 4.0 (see LICENSE.md)
+# RadZilla M5 – external display for RadiaCode
+# Copyright (c) 2026 Shimizilla – license: see LICENSE.md
 #
 # NOT part of RadZilla: run it by hand in Thonny (F5). Changes nothing on the
 # device. Requires aioble in /flash/libs (mip.install("aioble", target="/flash/libs")).

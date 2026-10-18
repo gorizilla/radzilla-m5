@@ -1,3 +1,10 @@
+# make_sirens.py – generates siren_danger.wav and siren_dose.wav for RadZilla M5.
+#
+# RadZilla M5 – external display for RadiaCode
+# Copyright (c) 2026 Shimizilla – license: see LICENSE.md
+#
+# Run on a computer with Python 3: python3 make_sirens.py – writes the WAV file(s)
+# into the current folder; copy them to device/radzilla/sounds/.
 import wave, struct, math
 SR = 22050
 def siren_curve(t, rise, hold, fall, lo, hi):

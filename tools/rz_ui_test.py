@@ -1,7 +1,7 @@
 # rz_ui_test.py – drawing / design test 2 for RadZilla M5 on M5Stack Core2 (UIFlow 2)
 #
 # RadZilla M5 – external display for RadiaCode
-# Copyright (c) 2026 Shimizilla – licensed under CC BY-NC 4.0 (see LICENSE.md)
+# Copyright (c) 2026 Shimizilla – license: see LICENSE.md
 #
 # NOT part of RadZilla: run it by hand in Thonny (F5). Changes nothing.
 #

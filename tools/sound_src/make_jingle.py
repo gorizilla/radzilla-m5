@@ -1,3 +1,10 @@
+# make_jingle.py – generates jingle.wav (splash, 4 s, with Geiger clicks) for RadZilla M5.
+#
+# RadZilla M5 – external display for RadiaCode
+# Copyright (c) 2026 Shimizilla – license: see LICENSE.md
+#
+# Run on a computer with Python 3: python3 make_jingle.py – writes the WAV file(s)
+# into the current folder; copy them to device/radzilla/sounds/.
 import wave, struct, math, random
 SR = 22050; DUR = 4.0
 random.seed(21)
@@ -32,5 +39,5 @@ while t < 3.85:
 y = 0; res = []
 for x in out:
     y += 0.7 * (x - y); res.append(y)
-w = wave.open("splash_jingle_final2.wav", "wb"); w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR)
+w = wave.open("jingle.wav", "wb"); w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR)
 w.writeframes(b"".join(struct.pack("<h", int(max(-1, min(1, v)) * 32767)) for v in res)); w.close(); print("ok")

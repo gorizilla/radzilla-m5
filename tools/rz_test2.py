@@ -1,7 +1,7 @@
 # rz_test2.py – follow-up hardware test for RadZilla on M5Stack Core2 (UIFlow 2)
 #
-# RadZilla – external display for RadiaCode
-# Copyright (c) 2026 Shimizilla – licensed under CC BY-NC 4.0 (see LICENSE.md)
+# RadZilla M5 – external display for RadiaCode
+# Copyright (c) 2026 Shimizilla – license: see LICENSE.md
 #
 # NOT part of RadZilla: run it by hand in Thonny (F5). Nothing is changed
 # permanently; the motion sensor settings are restored at the end.

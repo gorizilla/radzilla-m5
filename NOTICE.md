@@ -24,6 +24,25 @@ hardware it controls. Use at your own risk. Mandatory statutory liability
 (e.g. for intent or gross negligence, where it cannot be excluded by law)
 remains unaffected.
 
+## What RadZilla M5 changes on the RadiaCode
+
+RadZilla M5 reads the RadiaCode values over Bluetooth. It writes to the
+RadiaCode **only** in these cases:
+
+| Action | Trigger | Register / command |
+|---|---|---|
+| Short alarm signal of the RadiaCode (3 beeps + vibration) | HIGH / DANGER alarm starts (`RC_SIGNAL_ON`) | `PLAY_SIGNAL` 0x05E1, value **1** only |
+| Ticker (clicks) on / off | radiation symbol held 2 s on the CPS page | `SOUND_CTRL` 0x0520, **only bit 1** (read – change – write – read back) |
+| Restart the current spectrum | radiation symbol held 2 s on the RATE page | `WR_VIRT_STRING` 0x0827, `SPECTRUM` 0x0200 |
+| Start of the data session (handshake, as in the library) | every connection | `DEVICE_TIME` 0x0504 = 0 |
+
+The spectrum reset deletes the current spectrum in the RadiaCode – save
+spectra you want to keep in the official app first. `PLAY_SIGNAL` value 2
+is never sent (it starts a permanent alarm on the RC-102 that can only be
+stopped by switching the device off). Register meanings were checked on a
+RadiaCode-102 with firmware 4.14; other models or firmware versions may
+behave differently.
+
 ## No affiliation, trademarks
 
 RadZilla M5 is an independent project. It is **not affiliated with, endorsed
@@ -45,8 +64,8 @@ compatibility.
 Third-party software is not included in this repository and is not covered by
 RadZilla's license. Each component keeps its own license.
 
-## License (to be finalised)
+## License
 
-Planned: **CC BY-NC-SA 4.0** with commercial licences only by the author on
-request; presenting RadZilla in videos and articles is not considered
-commercial use. See [LICENSE.md](LICENSE.md).
+RadZilla M5: **CC BY-NC-SA 4.0**, commercial licenses only by the author;
+showing RadZilla M5 in videos and articles is allowed. See
+[LICENSE.md](LICENSE.md).

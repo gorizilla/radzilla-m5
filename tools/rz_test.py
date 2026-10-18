@@ -1,7 +1,7 @@
 # rz_test.py – hardware test for RadZilla on M5Stack Core2 (UIFlow 2 firmware)
 #
-# RadZilla – external display for RadiaCode
-# Copyright (c) 2026 Shimizilla – licensed under CC BY-NC 4.0 (see LICENSE.md)
+# RadZilla M5 – external display for RadiaCode
+# Copyright (c) 2026 Shimizilla – license: see LICENSE.md
 #
 # NOT part of RadZilla: run it by hand in Thonny (F5). It changes nothing on
 # the device (boot.py, main.py and the boot option stay as they are); the SD

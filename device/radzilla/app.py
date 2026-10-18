@@ -7,12 +7,13 @@
 # ⚠ Experimental – not a safety device. See NOTICE.md.
 #
 # Pages: RATE (µSv/h large), CPS (CPS large), DOSE (15-min dose + extra dose
-# today), SET (stage 3). Colour of symbol, ring and value by alarm state:
-# green normal, yellow HIGH, red DANGER, grey no data.
+# today), SET (WiFi, time, log). Colour of symbol, ring and value by alarm
+# state: green normal, yellow HIGH, red DANGER, grey no data.
 #
 # Input: double tap / swipe on the display = next / previous page,
 #        A = previous, C = next, B = DOSE page,
-#        B held = Bluetooth to the RadiaCode off / on (on after a restart).
+#        B held = Bluetooth to the RadiaCode off / on (on after a restart),
+#        radiation symbol held 2 s = RadiaCode ticker (CPS) / spectrum reset (RATE).
 #
 # All parts run as cooperative asyncio tasks – nothing may block for long.
 import asyncio

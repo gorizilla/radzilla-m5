@@ -1,8 +1,9 @@
-# Setup (stage 1)
+# Setup
 
-RadZilla M5 runs on the UIFlow 2 firmware of the M5Stack Core2. In stage 1
-it is started by hand from Thonny – nothing is changed on the device
-(boot.py, main.py and the boot option stay as they are).
+RadZilla M5 runs on the UIFlow 2 firmware of the M5Stack Core2. You can
+start it by hand from Thonny (section 3) – then nothing is changed on the
+Core2 (boot.py, main.py and the boot option stay as they are) – or install
+the autostart (section 4).
 
 ## 1. Requirements (once)
 
