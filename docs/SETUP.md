@@ -145,11 +145,11 @@ starts or ends; written to the card once per minute. uSv/h and Dose15 with
 German Numbers / Excel:
 
 ```
-Time;uSv/h;CPS;Alarm;Dose15;Lat;Lon;Alt
-2026-10-17 14:01:03;0,12;5,41;0;0,03;;;
+Time;uSv/h;CPS;Alarm;Dose15
+2026-10-17 14:01:05;0,124;5,41;0;0,031
 ```
 
-Alarm: 0 none, 1 HIGH, 2 DANGER, 3 DOSE. Lat/Lon/Alt stay empty until GPS
-is supported. Files older than 7 days are deleted automatically.
+Alarm: 0 none, 1 HIGH, 2 DANGER, 3 DOSE. For tracks with position use the
+RadiaCode app. Files older than 7 days are deleted automatically.
 
 All settings: `device/radzilla/config.py`.

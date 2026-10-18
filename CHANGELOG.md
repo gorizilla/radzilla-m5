@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.0.0-dev18 – 2026-10-18 (in development)
+
+- Counter clicks lighter on the CPU: the click sound is only rebuilt when
+  the rate changes by ~5 %, the noise part is precomputed (same sound).
+- Splash: no LED flash is lost any more – the LEDs run on their own clock
+  and continue where they stopped when the program is busy (max. 0.25 s
+  behind the jingle); the atom only repairs the orbits where an electron
+  was and redraws the core only when needed, ~25 frames/s.
+- Log without the GPS columns: `Time;uSv/h;CPS;Alarm;Dose15` (no GPS planned,
+  use the RadiaCode app for tracks).
+
 ## v2.0.0-dev17 – 2026-10-18 (in development)
 
 Based on dev14 (felt the best on the device); dev15 / dev16 are dropped:

@@ -29,6 +29,8 @@ ORBITS = ((0, 1.00), (60, 1.15), (120, 1.30))     # rotation, relative speed
 RX, RY = 30 * SCALE, 11 * SCALE
 DEG_PER_MS = 0.2                     # electron speed (8° per 40 ms frame)
 E_R = 5                              # electron radius
+FRAME_MS = 40                        # atom: ~25 frames per second
+LAG_MS = 250                         # LEDs: max. delay behind the jingle
 
 _skip = [False]
 _active = [False]
@@ -44,8 +46,9 @@ def _ramp(c, f):
     return tuple(int(a[j] + (b[j] - a[j]) * k) for j in range(3))
 
 
-def _led_frame(c, el, ci, clicks):
-    """LED colours at el ms; ci = clicks already played."""
+def _led_frame(c, el, ci, clicks, fstart):
+    """LED colours at el ms; ci = clicks already played, fstart = el at
+    which the flash of the latest click started."""
     n = len(clicks)
     last = clicks[-1] if n else 0
     leds = [(0, 0, 0)] * 10
@@ -62,7 +65,7 @@ def _led_frame(c, el, ci, clicks):
                 leds[j] = (max(old[0], int(gr[0] * a)), max(old[1], int(gr[1] * a)),
                            max(old[2], int(gr[2] * a)))
     if ci:
-        d = el - clicks[ci - 1]
+        d = el - fstart
         col = _ramp(c, (ci - 1) / max(1, n - 1))
         if ci == n:                                  # last click: red, hold, fade out
             k = 1.0 if d < c.SPLASH_HOLD_MS else max(0.0, 1 - (d - c.SPLASH_HOLD_MS) / c.SPLASH_FADE_MS)
@@ -75,24 +78,34 @@ def _led_frame(c, el, ci, clicks):
 
 
 async def _led_task(dev, c, t0):
+    """LED animation on its own clock: if the task is held up (drawing,
+    Bluetooth), it continues where it stopped (max. 40 ms per step) instead
+    of skipping, so no flash is lost; it never lags more than LAG_MS behind
+    the jingle. One click per step, every click gets its own flash."""
     clicks = c.SPLASH_CLICKS
-    ci = 0
+    n = len(clicks)
+    ci, fstart = 0, 0
+    vel = 0                                          # virtual elapsed ms
+    last = time.ticks_ms()
     vib_off = None
     while True:
-        el = time.ticks_diff(time.ticks_ms(), t0)
-        new = ci
-        while new < len(clicks) and el >= clicks[new]:
-            new += 1
-        if new != ci:
-            ci = new
+        now = time.ticks_ms()
+        vel += min(time.ticks_diff(now, last), 40)
+        last = now
+        real = time.ticks_diff(now, t0)
+        if real - vel > LAG_MS:
+            vel = real - LAG_MS
+        if ci < n and vel >= clicks[ci]:             # next click: flash + vibration
+            ci += 1
+            fstart = vel
             if c.VIB_ON:
                 dev.vibrate(c.SPLASH_VIB_LEVEL)
-                vib_off = el + c.SPLASH_VIB_MS
-        if vib_off is not None and el >= vib_off:
+                vib_off = vel + c.SPLASH_VIB_MS
+        if vib_off is not None and vel >= vib_off:
             vib_off = None
             dev.vibrate(0)
         if c.LED_ON:
-            dev.leds(_led_frame(c, el, ci, clicks))
+            dev.leds(_led_frame(c, vel, ci, clicks, fstart))
         await asyncio.sleep_ms(25)
 
 
@@ -125,10 +138,32 @@ def _pos(rot, deg):
 def _draw_orbits(g, orbits):
     for pts in orbits:
         for i in range(len(pts) - 1):
-            x0, y0 = pts[i]
-            x1, y1 = pts[i + 1]
-            g.drawLine(x0, y0, x1, y1, ORBIT)
-            g.drawLine(x0, y0 + 1, x1, y1 + 1, ORBIT)
+            _seg(g, pts[i], pts[i + 1])
+
+
+def _seg(g, p0, p1):
+    x0, y0 = p0
+    x1, y1 = p1
+    g.drawLine(x0, y0, x1, y1, ORBIT)
+    g.drawLine(x0, y0 + 1, x1, y1 + 1, ORBIT)
+
+
+def _repair_orbits(g, orbits, spots):
+    """Redraw only the orbit segments near erased electrons."""
+    r = E_R + 3
+    for pts in orbits:
+        for i in range(len(pts) - 1):
+            (x0, y0), (x1, y1) = pts[i], pts[i + 1]
+            for x, y in spots:
+                if min(x0, x1) - r <= x <= max(x0, x1) + r and \
+                        min(y0, y1) - r <= y <= max(y0, y1) + r:
+                    _seg(g, pts[i], pts[i + 1])
+                    break
+
+
+def _near_core(spots):
+    lim = (14 * SCALE + E_R + 2) ** 2
+    return any((x - CX) ** 2 + (y - CY) ** 2 <= lim for x, y in spots)
 
 
 def _draw_core(g):
@@ -179,19 +214,22 @@ async def run(dev, c, version):
             el = time.ticks_diff(time.ticks_ms(), t0)
             if el >= c.SPLASH_MS:
                 break
-            # electrons: erase old, redraw orbits and core, draw new
+            # electrons: erase old, repair the orbits there, draw new; the
+            # core only when an electron was / is in front of it
             for x, y in old:
                 g.fillCircle(x, y, E_R + 1, BG)
             if old:
-                _draw_orbits(g, orbits)
+                _repair_orbits(g, orbits, old)
+            await asyncio.sleep_ms(0)                # let the LEDs run
             new = []
             for k, (rot, speed) in enumerate(ORBITS):
                 new.append(_pos(rot, (el * DEG_PER_MS * speed + k * 120) % 360))
             for x, y in new:
                 g.fillCircle(x, y, E_R, ELECTRON)
-            _draw_core(g)                            # core in front of the orbits
+            if _near_core(old + new):
+                _draw_core(g)                        # core in front of the orbits
             old = new
-            await asyncio.sleep_ms(30)
+            await asyncio.sleep_ms(FRAME_MS)
     finally:
         led.cancel()
         if _skip[0]:

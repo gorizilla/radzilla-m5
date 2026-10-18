@@ -6,7 +6,8 @@
 # The RadiaCode sends the count rate once per second (no single pulses), so
 # the clicks are generated here: every second a 1 s WAV (16 kHz, 8 bit) with
 # randomly spaced clicks (like a real counter) is built in RAM and played in
-# the background.
+# the background. The click sound itself is only rebuilt when the rate
+# changes by ~5 % (click_key), otherwise the cached one is reused.
 #   search range up to CLICK_LIVE_CPS: clicks 1:1 with the CPS, soft tick,
 #     pitch rises slightly with the rate
 #   above: denser, louder and harder (CLICK_*_TABLE), max. 70 % volume
@@ -53,6 +54,14 @@ def volume(cps, c, dimmed):
     return v * c.CLICK_DIM_FACTOR if dimmed else v
 
 
+_NOISE = [random.random() * 2 - 1 for _ in range(256)]   # precomputed noise
+
+
+def click_key(cps):
+    """Clicks are only rebuilt when the rate changes by ~5 % (log steps)."""
+    return int(math.log(max(cps, 3)) * 20)
+
+
 def make_click(cps, c):
     """One click (bytes, 8-bit unsigned) for this count rate."""
     x = max(cps, 3)
@@ -70,7 +79,7 @@ def make_click(cps, c):
     vals = []
     for i in range(n):
         t = i / RATE
-        v = ((1 - noise) * math.sin(w1 * i) + noise * (random.random() * 2 - 1)) * math.exp(-t / tau)
+        v = ((1 - noise) * math.sin(w1 * i) + noise * _NOISE[i & 255]) * math.exp(-t / tau)
         if mix:
             v += mix * (0.5 * math.sin(ws * i) + 0.5 * math.sin(ws * 1.006 * i)
                         + 0.25 * math.sin(2 * ws * i)) * math.exp(-t / 0.006)
@@ -91,6 +100,8 @@ class Clicker:
         self.buf = [bytearray(h + self.silence), bytearray(h + self.silence)]
         self.cur = 0
         self.playing = False
+        self._ck_key = None                         # cached click for this rate step
+        self._ck = b""
 
     def _fill(self, b, rate, click):
         mv = memoryview(b)
@@ -126,7 +137,10 @@ class Clicker:
                 continue
             cps = S.cps or 0
             b = self.buf[self.cur]
-            if self._fill(b, clicks_per_s(cps, c), make_click(cps, c)) == 0 and not self.playing:
+            key = click_key(cps)
+            if key != self._ck_key:                 # rate changed noticeably: new click sound
+                self._ck_key, self._ck = key, make_click(cps, c)
+            if self._fill(b, clicks_per_s(cps, c), self._ck) == 0 and not self.playing:
                 continue
             self.dev.play_wav(b, volume(cps, c, light.dimmed))
             self.playing = True

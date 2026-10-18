@@ -7,7 +7,7 @@
 # ⚠ Experimental: thresholds and conversion factor are not calibrated –
 #   see NOTICE.md. Not a safety device.
 
-VERSION = "2.0.0-dev17"
+VERSION = "2.0.0-dev18"
 DEVICE = "core2"            # hardware module in devices/ (later also "stopwatch")
 DIAG = False                # True: print a status line to the shell every 5 s
                             # (incl. CPU clock and battery current to compare power use)
@@ -211,7 +211,7 @@ SYNC_INTERVAL_H = 24        # sync again after this time
 PORTAL_TIMEOUT_S = 300      # phone setup closes after this time
 
 # --- CSV log ------------------------------------------------------------------------
-# Time;uSv/h;CPS;Alarm;Dose15;Lat;Lon;Alt  (Lat/Lon/Alt stay empty until GPS, stage 4)
+# Time;uSv/h;CPS;Alarm;Dose15
 #   Alarm 0 none, 1 HIGH, 2 DANGER, 3 DOSE (state, DANGER > DOSE > HIGH)
 # Semicolon + decimal comma -> opens directly in German Numbers/Excel.
 # Log on / off with the LOG button on the SET page; not stored, on after every start.

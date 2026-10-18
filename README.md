@@ -34,8 +34,8 @@ RadiaCode devices or with M5Stack.
 - **SET page**: WiFi via on-screen keyboard or phone, time sync with the
   PTB atomic clock.
 
-Planned: GPS (stage 4), documentation and license (stage 5), M5Stack
-StopWatch support.
+Planned: documentation and license (stage 5), M5Stack StopWatch support.
+No GPS – for tracks with position use the RadiaCode app.
 
 ## Hardware
 

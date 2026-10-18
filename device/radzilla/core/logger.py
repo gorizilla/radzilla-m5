@@ -4,12 +4,11 @@
 # Copyright (c) 2026 Shimizilla – license: see LICENSE.md
 #
 #   /sd/RadZilla/logs/rc_2026-10-17_1401.csv
-#     Time;uSv/h;CPS;Alarm;Dose15;Lat;Lon;Alt
-#     2026-10-17 14:01:05;0,124;8,53;0;0,031;;;
+#     Time;uSv/h;CPS;Alarm;Dose15
+#     2026-10-17 14:01:05;0,124;8,53;0;0,031
 #
 #   Alarm  0 none, 1 HIGH, 2 DANGER, 3 DOSE (state, DANGER > DOSE > HIGH)
 #   Dose15 dose in µSv within the dose window
-#   Lat/Lon/Alt GPS position (empty until the GPS unit is supported)
 #
 # * new file per start and after LOG_FILE_H hours of run time
 # * buffered in RAM, written every LOG_FLUSH_S seconds
@@ -19,7 +18,7 @@
 import os
 import time
 
-HEADER = "Time;uSv/h;CPS;Alarm;Dose15;Lat;Lon;Alt\n"
+HEADER = "Time;uSv/h;CPS;Alarm;Dose15\n"
 
 
 def days_from_civil(y, m, d):
@@ -54,10 +53,6 @@ def _parse_name(name):
 
 def _num(v, dec=2):
     return ("%.*f" % (dec, v)).replace(".", ",")
-
-
-def _opt(v, fmt):
-    return "" if v is None else (fmt % v).replace(".", ",")
 
 
 def _makedirs(path):
@@ -182,7 +177,7 @@ class Logger:
         print("Log created:", path)
 
     # ---------- writing ----------
-    def add(self, t, usv, cps, alarm, dose, lat=None, lon=None, alt=None):
+    def add(self, t, usv, cps, alarm, dose):
         if not self.c.LOG_ON or self.full or self.error:
             return
         now_s = _secs(t)
@@ -197,9 +192,9 @@ class Logger:
             elif now_s - self.start_s >= self.c.LOG_FILE_H * 3600:
                 self.flush()
                 self._new_file(t)
-            self.buf.append("%04d-%02d-%02d %02d:%02d:%02d;%s;%s;%d;%s;%s;%s;%s\n" % (
+            self.buf.append("%04d-%02d-%02d %02d:%02d:%02d;%s;%s;%d;%s\n" % (
                 t[0], t[1], t[2], t[3], t[4], t[5], _num(usv, 3), _num(cps), alarm,
-                _num(dose, 3), _opt(lat, "%.6f"), _opt(lon, "%.6f"), _opt(alt, "%.1f")))
+                _num(dose, 3)))
             now = time.ticks_ms()
             if time.ticks_diff(now, self.last_flush) >= self.c.LOG_FLUSH_S * 1000:
                 self.flush()
