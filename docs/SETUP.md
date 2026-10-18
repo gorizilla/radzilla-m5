@@ -57,6 +57,15 @@ it is started by hand from Thonny – nothing is changed on the device
 | button A / C | previous / next page |
 | button B | DOSE page |
 | hold button B (2 s) | Bluetooth to the RadiaCode off / on – while off: no readings, no alarms, no log; always on after a restart |
+| hold the large radiation symbol on the CPS page (2 s) | counter clicks on / off (one vibration); stored |
+
+### Counter clicks
+
+Quiet clicks with the count rate, only on the CPS page (20 %, dimmed 13 %).
+The RadiaCode sends the rate once per second, so the clicks are generated
+with random spacing like a real counter: 1:1 up to 5 CPS, above
+logarithmic (100 CPS -> 20 clicks/s, from 10 000 CPS 60 clicks/s). Paused
+while an alarm sound plays. Stored in `/flash/radzilla/settings.json`.
 
 ## Battery empty
 

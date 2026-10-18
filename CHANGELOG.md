@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.0.0-dev11 – 2026-10-18 (in development)
+
+- **Counter clicks** on the CPS page: quiet clicks with the count rate
+  (randomly spaced, 1 s WAV built in RAM every second); 1:1 up to 5 CPS,
+  above logarithmic up to 60 clicks/s (`CLICK_TABLE`). Volume 20 %, 13 %
+  while dimmed; paused during alarm sounds. On / off: hold the large
+  radiation symbol 2 s (one vibration), stored in
+  `/flash/radzilla/settings.json` (not in git).
+- Splash: the LED flashes go from green over yellow and orange to red.
+
 ## v2.0.0-dev10 – 2026-10-18 (in development)
 
 Power saving without losing functions (readings still every second, drawn

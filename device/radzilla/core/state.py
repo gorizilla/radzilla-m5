@@ -30,6 +30,7 @@ class State:
         self.batt = None            # RadiaCode battery in %
         self.last_ms = None         # time of the last reading
         self.page = PAGE_RATE
+        self.click_on = False       # counter clicks on the CPS page (settings.json)
         # dose-rate alarm
         self.level = 0              # 0 / 1 HIGH / 2 DANGER
         self.count = 0              # beeps played in the current level

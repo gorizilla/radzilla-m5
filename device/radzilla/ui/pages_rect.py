@@ -90,6 +90,11 @@ SET_BUTTONS = {"add": (12, 172, 68, 26), "phone": (88, 172, 68, 26),
 SET_LABELS = {"add": "+WIFI", "phone": "PHONE", "sync": "SYNC"}   # "log": colour = state
 
 
+def cps_symbol_at(x, y):
+    """True if (x, y) is on the large radiation symbol (inside the ring)."""
+    return (x - GAUGE_CX) ** 2 + (y - GAUGE_CY) ** 2 <= 46 * 46
+
+
 def set_button_at(x, y):
     for name, (bx, by, bw, bh) in SET_BUTTONS.items():
         if bx <= x < bx + bw and by - 6 <= y < by + bh + 6:

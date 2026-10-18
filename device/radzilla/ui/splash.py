@@ -29,6 +29,16 @@ _skip = [False]
 _active = [False]
 
 
+def _ramp(c, f):
+    """Colour for 0..1 along green -> yellow -> orange -> red."""
+    stops = (c.LED_GREEN, c.LED_YELLOW, c.LED_ORANGE, c.LED_RED)
+    f = max(0.0, min(1.0, f)) * (len(stops) - 1)
+    i = min(int(f), len(stops) - 2)
+    k = f - i
+    a, b = stops[i], stops[i + 1]
+    return tuple(int(a[j] + (b[j] - a[j]) * k) for j in range(3))
+
+
 def active():
     return _active[0]
 
@@ -129,8 +139,8 @@ async def run(dev, c, version):
             if ci < len(clicks) and el >= clicks[ci]:
                 while ci < len(clicks) and el >= clicks[ci]:
                     ci += 1
-                if c.LED_ON:
-                    dev.leds([c.LED_GREEN] * 10)
+                if c.LED_ON:                         # green -> yellow -> orange -> red
+                    dev.leds([_ramp(c, (ci - 1) / max(1, len(clicks) - 1))] * 10)
                 if c.VIB_ON:
                     dev.vibrate(c.SPLASH_VIB_LEVEL)
                 flash_off = el + c.SPLASH_VIB_MS

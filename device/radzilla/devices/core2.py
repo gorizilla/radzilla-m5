@@ -35,6 +35,7 @@ EV_PREV = "prev"            # previous page (swipe left, A)
 EV_DOSE = "dose"            # B: DOSE page
 EV_HOLD_B = "hold_b"        # B held: Bluetooth off / on
 EV_ACTIVE = "active"        # any touch / button: wakes the display
+EV_HOLD = "hold"            # touch held still: (EV_HOLD, x, y) – CPS page symbol
 
 
 _LIPO = ((4200, 100), (4100, 90), (4000, 80), (3900, 65), (3800, 50), (3750, 40),
@@ -83,6 +84,7 @@ class Device:
         self._down = None               # (t, x, y) at touch start
         self._last = None               # last (x, y) while touching
         self._last_tap = None
+        self._held = False                  # hold event already sent for this touch
         self._b_held = False
         from M5 import BtnB
         try:
@@ -283,15 +285,24 @@ class Device:
         if n and y < self.TOUCH_H:
             if self._down is None:
                 self._down = (now, x, y)
+                self._held = False
                 ev.append(EV_ACTIVE)
             self._last = (x, y)
+            t0, x0, y0 = self._down
+            if not self._held and time.ticks_diff(now, t0) >= self.c.TOUCH_HOLD_MS \
+                    and abs(x - x0) < self.c.TAP_MOVE_PX and abs(y - y0) < self.c.TAP_MOVE_PX:
+                self._held = True
+                self._last_tap = None
+                ev.append((EV_HOLD, x0, y0))
         elif self._down is not None:                       # released
             t0, x0, y0 = self._down
             x1, y1 = self._last or (x0, y0)
             dx, dy = x1 - x0, y1 - y0
             dur = time.ticks_diff(now, t0)
             self._down = None
-            if abs(dx) >= self.c.SWIPE_PX and abs(dx) > abs(dy):
+            if self._held:                                 # hold: no tap / swipe
+                pass
+            elif abs(dx) >= self.c.SWIPE_PX and abs(dx) > abs(dy):
                 ev.append(EV_NEXT if dx > 0 else EV_PREV)     # swipe right = next page
                 self._last_tap = None
             elif dur <= self.c.TAP_MAX_MS and abs(dx) < self.c.TAP_MOVE_PX \

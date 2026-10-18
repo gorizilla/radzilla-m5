@@ -28,6 +28,8 @@ P_IDLE, P_HEART, P_GEIGER, P_HIGH, P_DOSE, P_DANGER = 0, 1, 2, 3, 4, 5
 
 
 class FX:
+    P_GEIGER = P_GEIGER
+
     def __init__(self, dev, cfg):
         self.dev = dev
         self.c = cfg
@@ -64,8 +66,8 @@ class FX:
     def _start(self, prio, frame, length_ms):
         if self.cur is not None and self.cur[0] > prio:
             return False
-        if self.cur is not None and self.cur[0] >= P_HIGH:
-            self.dev.stop_sound()               # a higher alarm replaces a sound
+        if prio >= P_GEIGER or (self.cur is not None and self.cur[0] >= P_HIGH):
+            self.dev.stop_sound()               # alarms replace a sound (also the counter clicks)
         self.cur = (prio, time.ticks_ms(), frame, length_ms)
         self._ev.set()
         return True

@@ -7,7 +7,7 @@
 # ⚠ Experimental: thresholds and conversion factor are not calibrated –
 #   see NOTICE.md. Not a safety device.
 
-VERSION = "2.0.0-dev10"
+VERSION = "2.0.0-dev11"
 DEVICE = "core2"            # hardware module in devices/ (later also "stopwatch")
 DIAG = False                # True: print a status line to the shell every 5 s
                             # (incl. CPU clock and battery current to compare power use)
@@ -47,6 +47,7 @@ TAP_MOVE_PX = 20            # ... and moves less than this
 DOUBLE_TAP_MS = 400         # max. gap between the two taps of a double tap
 SWIPE_PX = 60               # min. horizontal movement of a swipe
 B_HOLD_MS = 2000            # B held this long = Bluetooth off / on
+TOUCH_HOLD_MS = 2000        # radiation symbol on the CPS page held this long = clicks on / off
 BT_VIB_LEVEL = 200          # confirmation vibration (0..255) ...
 BT_VIB_MS = 150             # ... and its length
 
@@ -152,6 +153,17 @@ GEIGER_DURATION_MS = 5000
 GEIGER_RATE_HZ = 12
 GEIGER_CLICK_MS = 3
 GEIGER_FREQ_HZ = 3000
+
+# --- Counter clicks (CPS page) -------------------------------------------------------
+# Quiet clicks with the count rate, only on the CPS page. On / off: hold the
+# large radiation symbol for 2 s (vibration); stored in /flash/radzilla/settings.json.
+# The RadiaCode sends the rate once per second, the clicks are spaced randomly.
+CLICK_ON = False            # default before the first switch
+CLICK_VOLUME_PCT = 20
+CLICK_DIM_VOLUME_PCT = 13   # while the display is dimmed
+# (CPS, clicks/s): up to the first entry 1:1 (proportional), above logarithmic, max. 60/s
+CLICK_TABLE = ((5, 5), (10, 8), (20, 11), (50, 16), (100, 20), (300, 28),
+               (1000, 38), (3000, 49), (10000, 60))
 
 # --- RadiaCode signal (the RadiaCode itself beeps / vibrates) ---------------------
 # On HIGH / DANGER start the RadiaCode plays its short alarm (3 beeps + vibration).

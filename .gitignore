@@ -2,6 +2,7 @@
 device/radzilla/secrets.py
 wifi.json
 lastsync.txt
+settings.json
 secrets.py
 
 # --- Measurement logs downloaded from the board ---

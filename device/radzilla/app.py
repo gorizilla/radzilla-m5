@@ -25,6 +25,8 @@ from radzilla.core import state as st
 from radzilla.core import trend, dose, alarms
 from radzilla.core.logger import Logger
 from radzilla import fx
+from radzilla import clicker
+from radzilla.core import settings
 from radzilla.core import timesync, wificfg
 from radzilla.ui import gfx, splash
 
@@ -209,6 +211,7 @@ class Light:
 LIGHT = None
 FX = None
 DIAG = {"draws": 0, "last_ms": 0, "max_ms": 0}
+SETTINGS = {}
 BATT = [None, "bat"]                    # device battery (pct, mode), read every BAT_READ_S
 
 
@@ -278,6 +281,15 @@ async def _vibrate(ms):
     DEV.vibrate(0)
 
 
+def toggle_click():
+    """Counter clicks on / off (stored); confirmation: one short vibration."""
+    S.click_on = not S.click_on
+    SETTINGS["click"] = S.click_on
+    settings.save(SETTINGS)
+    print("Clicks", "on" if S.click_on else "off")
+    asyncio.create_task(_vibrate(C.BT_VIB_MS))
+
+
 async def power_task():
     """Switch the device off when the battery stays below BAT_OFF_PCT for
     BAT_OFF_HOLD_S (not with the cable; also during an alarm, to protect the
@@ -333,6 +345,10 @@ async def input_task():
                 if splash.active():          # any touch / button skips the splash
                     if e == "active":
                         splash.skip()
+                    continue
+                if isinstance(e, tuple) and e[0] == "hold":
+                    if S.page == st.PAGE_CPS and not S.modal and PAGES.cps_symbol_at(e[1], e[2]):
+                        toggle_click()
                     continue
                 if e == "active":
                     LIGHT.wake()
@@ -679,6 +695,8 @@ async def main():
     SYNC["last"] = _load_lastsync()
     LOG = Logger(C, DEV.sd_mounted)
     BATT[0], BATT[1] = DEV.battery()
+    SETTINGS.update(settings.load(C))
+    S.click_on = bool(SETTINGS.get("click"))
     LIGHT = Light()
     FX = fx.FX(DEV, C)
     print("RadZilla M5 v%s on %s, log: %s" % (C.VERSION, DEV.NAME, LOG.dir))
@@ -694,6 +712,7 @@ async def main():
     asyncio.create_task(alarms.task(FX, S, C))
     asyncio.create_task(sync_task())
     asyncio.create_task(power_task())
+    asyncio.create_task(clicker.Clicker(DEV, C).task(S, FX, LIGHT, st.PAGE_CPS))
     if C.DIAG:
         asyncio.create_task(diag_task())
     await rc
