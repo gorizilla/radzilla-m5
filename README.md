@@ -9,6 +9,9 @@ and vibration, and writes a CSV log to the microSD card.
 > Readings and alarms may be delayed, wrong or missing. Provided without any
 > warranty or liability – see [NOTICE.md](NOTICE.md).
 
+https://youtube.com/shorts/N7r9StwhWkA?is=MNxti6cuFz33u1oz
+
+https://youtube.com/shorts/B7j6XLYtmLs?is=ODfFeS_a2M88-822
 <!-- Photos follow – see docs/images/README.md -->
 
 **Version 2.0.0** · Copyright © 2026 Shimizilla · [CC BY-NC-SA 4.0](LICENSE.md)
