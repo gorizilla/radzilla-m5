@@ -82,11 +82,12 @@ class FX:
         return [col if i in RUN[k] else OFF for i in range(N_LED)]
 
     # ---------- effects ----------
-    def heartbeat(self):
+    def heartbeat(self, col=None):
         c = self.c
         if not (c.LED_ON and c.HEARTBEAT_ON) or self.busy():
             return
-        self._start(P_HEART, lambda el: (self._run_leds(el, c.LED_GREEN, c.LED_STEP_MS), 0),
+        col = col or c.LED_GREEN
+        self._start(P_HEART, lambda el: (self._run_leds(el, col, c.LED_STEP_MS), 0),
                     len(RUN) * c.LED_STEP_MS + 40)
 
     def high(self):

@@ -7,7 +7,7 @@
 # ⚠ Experimental: thresholds and conversion factor are not calibrated –
 #   see NOTICE.md. Not a safety device.
 
-VERSION = "2.0.0-dev11"
+VERSION = "2.0.0-dev12"
 DEVICE = "core2"            # hardware module in devices/ (later also "stopwatch")
 DIAG = False                # True: print a status line to the shell every 5 s
                             # (incl. CPU clock and battery current to compare power use)
@@ -110,14 +110,24 @@ LED_ALARM_LEVEL_PCT = 80    # brightness 0..100: HIGH / DANGER / DOSE / Geiger
 LED_MODE = "run"            # "run" = lights move centre -> ends, "blink" = all at once
 LED_STEP_MS = 110           # speed of the run (per step)
 LED_BLINK_MS = 150          # length of a blink (LED_MODE = "blink")
-HEARTBEAT_ON = True         # normal state: short green run every HEARTBEAT_S
-HEARTBEAT_S = 20
+HEARTBEAT_ON = True         # short run every HEARTBEAT_S, colour follows the dose rate
+HEARTBEAT_S = 20            # normal state
+HEARTBEAT_ALARM_S = 10      # during HIGH / DANGER / DOSE, after the alarm signals
 HEARTBEAT_LEVEL_PCT = 40    # brightness 0..100 of the heartbeat run
 HEARTBEAT_WHEN_DIM = True   # also while the display is dimmed
 LED_GREEN = (0, 255, 0)
 LED_YELLOW = (255, 170, 0)
 LED_ORANGE = (255, 70, 0)
 LED_RED = (255, 0, 0)
+# Heartbeat colour (logarithmic): green up to HB_GREEN_USV, slightly yellow-green
+# up to HB_WARN_USV (HB_LIME), towards yellow up to LEVEL1_USV (HB_PRE);
+# HIGH: LED_YELLOW -> LED_ORANGE (60 %) -> HB_NEAR_RED at LEVEL2_USV;
+# DANGER / DOSE: LED_RED
+HB_GREEN_USV = 0.12
+HB_WARN_USV = 0.18
+HB_LIME = (90, 255, 0)
+HB_PRE = (200, 215, 0)
+HB_NEAR_RED = (255, 20, 0)
 
 # --- Vibration ---------------------------------------------------------------------------
 VIB_ON = True

@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.0.0-dev12 – 2026-10-18 (in development)
+
+- Fix: during a HIGH / DANGER / DOSE alarm the LEDs stayed dark after the
+  alarm signals. Now the heartbeat run continues every 10 s
+  (`HEARTBEAT_ALARM_S`) once the beeps / siren are over.
+- Heartbeat colour follows the dose rate (logarithmic): green up to
+  0.12 µSv/h, slightly yellow-green up to 0.18, towards yellow up to 0.20;
+  HIGH yellow -> orange -> nearly red at 10 µSv/h; DANGER / DOSE red
+  (`HB_*` in config.py). 40 %, also while dimmed.
+
 ## v2.0.0-dev11 – 2026-10-18 (in development)
 
 - **Counter clicks** on the CPS page: quiet clicks with the count rate

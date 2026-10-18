@@ -10,6 +10,7 @@
 # DANGER and DOSE play their siren once. An alarm ends below threshold x (1 - HYSTERESIS).
 # Sound, LEDs and vibration are played by fx.py.
 import asyncio
+import math
 import time
 
 from radzilla import fx as fx_mod
@@ -42,6 +43,32 @@ def update_level(S, C):
     return None
 
 
+# ---------- heartbeat colour -------------------------------------------------------
+def _mix(a, b, k):
+    k = max(0.0, min(1.0, k))
+    return tuple(int(a[i] + (b[i] - a[i]) * k) for i in range(3))
+
+
+def _logk(v, a, b):
+    return math.log(v / a) / math.log(b / a)
+
+
+def heart_color(C, usv, level, dose_active):
+    """Colour of the heartbeat run for the dose rate (logarithmic)."""
+    if level == 2 or dose_active:
+        return C.LED_RED
+    if usv is None or usv <= C.HB_GREEN_USV:
+        return C.LED_GREEN
+    if level == 1 or usv >= C.LEVEL1_USV:
+        k = _logk(max(usv, C.LEVEL1_USV), C.LEVEL1_USV, C.LEVEL2_USV)
+        if k < 0.6:
+            return _mix(C.LED_YELLOW, C.LED_ORANGE, k / 0.6)
+        return _mix(C.LED_ORANGE, C.HB_NEAR_RED, (k - 0.6) / 0.4)
+    if usv <= C.HB_WARN_USV:
+        return _mix(C.LED_GREEN, C.HB_LIME, _logk(usv, C.HB_GREEN_USV, C.HB_WARN_USV))
+    return _mix(C.HB_LIME, C.HB_PRE, _logk(usv, C.HB_WARN_USV, C.LEVEL1_USV * 0.995))
+
+
 # ---------- RadiaCode signal ------------------------------------------------------
 def queue_rc_signal(S, C, level):
     if not C.RC_SIGNAL_ON:
@@ -70,7 +97,9 @@ async def task(fx, S, C):
     """Dose window upkeep and the alarm effects (sound, LEDs, vibration):
     HIGH beep + yellow run every ALARM1_INTERVAL_MS (max. ALARM1_MAX_REPEAT),
     DANGER siren once per event, DOSE siren once per event, Geiger pre-warning
-    at RING_WARN_PCT, green heartbeat in the normal state."""
+    at RING_WARN_PCT. Heartbeat run in the colour of the dose rate: every
+    HEARTBEAT_S normally, every HEARTBEAT_ALARM_S during an alarm once its
+    signals are over."""
     last_heart = time.ticks_ms()
     danger_done = False
     while True:
@@ -80,6 +109,7 @@ async def task(fx, S, C):
         dose.trim(S, C, now)                  # the dose decays also without data
         if dose.update_alarm(S, C) and C.ALARM3_ON and S.level < 2 and fresh:
             fx.dose()
+            last_heart = now
             S.wake = True
         if C.GEIGER_ON:
             p = dose.pct(S, C)
@@ -93,18 +123,25 @@ async def task(fx, S, C):
         lvl = S.level
         if lvl < 2:
             danger_done = False
+        signals_over = True                   # alarm beeps / sirens finished
         if lvl == 2 and fresh and C.ALARM2_ON and not danger_done:
             danger_done = True
             fx.danger()
+            last_heart = now
         elif lvl == 1 and fresh and C.ALARM1_ON:
-            if not (C.ALARM1_MAX_REPEAT and S.count >= C.ALARM1_MAX_REPEAT) and \
-                    not fx.busy(fx_mod.P_HIGH) and \
+            more = not (C.ALARM1_MAX_REPEAT and S.count >= C.ALARM1_MAX_REPEAT)
+            if more and not fx.busy(fx_mod.P_HIGH) and \
                     (S.last_beep is None or time.ticks_diff(now, S.last_beep) >= C.ALARM1_INTERVAL_MS):
                 S.last_beep = now
                 S.count += 1
                 fx.high()
-        elif lvl == 0 and fresh and S.connected and not S.dose_active:
-            if time.ticks_diff(now, last_heart) >= C.HEARTBEAT_S * 1000:
+                last_heart = now
+            if more:
+                signals_over = False
+        alarm = lvl > 0 or S.dose_active
+        if fresh and S.connected and signals_over and not fx.busy(fx_mod.P_GEIGER):
+            iv = C.HEARTBEAT_ALARM_S if alarm else C.HEARTBEAT_S
+            if time.ticks_diff(now, last_heart) >= iv * 1000:
                 last_heart = now
                 if C.HEARTBEAT_WHEN_DIM or not S.dimmed:
-                    fx.heartbeat()
+                    fx.heartbeat(heart_color(C, S.usv, lvl, S.dose_active))

@@ -59,6 +59,14 @@ it is started by hand from Thonny – nothing is changed on the device
 | hold button B (2 s) | Bluetooth to the RadiaCode off / on – while off: no readings, no alarms, no log; always on after a restart |
 | hold the large radiation symbol on the CPS page (2 s) | counter clicks on / off (one vibration); stored |
 
+### LED heartbeat
+
+A short run of the LEDs shows the state without looking at the display
+(40 %, also while dimmed): every 20 s normally, every 10 s during an alarm
+once its beeps / siren are over. The colour follows the dose rate:
+green up to 0.12 µSv/h, slightly yellow-green up to 0.18, towards yellow
+up to 0.20; HIGH yellow -> orange -> nearly red up to 10; DANGER and DOSE red.
+
 ### Counter clicks
 
 Quiet clicks with the count rate, only on the CPS page (20 %, dimmed 13 %).
