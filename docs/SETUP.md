@@ -65,6 +65,13 @@ On battery, when the level stays below 5 % for 30 s, the display shows
 itself off – also during an alarm, to protect the battery. Switch it on again
 with the power button (charge first). Settings `BAT_OFF_*` in `config.py`.
 
+## Power use
+
+`CPU_MHZ = 160` in `config.py` (UIFlow default 240). To compare: set
+`DIAG = True`, run RadZilla from Thonny on battery and read `mA` in the
+DIAG line (e.g. 240 vs. 160). 80 MHz is possible but must be tested
+(Bluetooth, sirens, LEDs).
+
 ## SET page – WiFi and time
 
 The WiFi is only used for the time sync (PTB atomic clock). After a sync the

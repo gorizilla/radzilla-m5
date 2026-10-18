@@ -7,9 +7,11 @@
 # ⚠ Experimental: thresholds and conversion factor are not calibrated –
 #   see NOTICE.md. Not a safety device.
 
-VERSION = "2.0.0-dev9"
+VERSION = "2.0.0-dev10"
 DEVICE = "core2"            # hardware module in devices/ (later also "stopwatch")
 DIAG = False                # True: print a status line to the shell every 5 s
+                            # (incl. CPU clock and battery current to compare power use)
+CPU_MHZ = 160               # CPU clock: 240 (UIFlow default), 160 or 80 (test first)
 
 # --- Display -------------------------------------------------------------------
 BRIGHTNESS = 130            # 0..255
@@ -18,12 +20,15 @@ DIM_AFTER_S = 90
 DIM_BRIGHTNESS = 30
 WAKE_ON_PICKUP = False      # True: picking the device up wakes the display (motion sensor)
 PICKUP_G = 0.15             # change of acceleration that counts as "picked up"
-REDRAW_MS = 100             # check for redraws this often
+REDRAW_MS = 100             # check for redraws this often (new readings appear at once)
+INPUT_MS = 20               # touch / buttons are read this often ...
+INPUT_DIM_MS = 50           # ... and this often while the display is dimmed
 
 # --- Device battery ---------------------------------------------------------------
 # Level from the battery voltage corrected by current x internal resistance.
 # With the cable: yellow bolt + estimated level "~64%" while charging,
 # green bolt + "100%" when full.
+BAT_READ_S = 2              # read the device battery this often
 BAT_CABLE_MA = 20           # battery current above -20 mA = cable connected
 BAT_RINT_MOHM = 250         # internal resistance of the battery (estimate)
 # Automatic switch-off (on battery only, also during an alarm): below

@@ -1,5 +1,17 @@
 # Changelog
 
+## v2.0.0-dev10 – 2026-10-18 (in development)
+
+Power saving without losing functions (readings still every second, drawn
+at once):
+- CPU clock 160 MHz instead of 240 MHz (`CPU_MHZ`).
+- Touch / buttons read every 50 ms while the display is dimmed (20 ms
+  otherwise); the effect control sleeps until an effect starts.
+- Device battery read in one place every 2 s (`BAT_READ_S`) instead of on
+  every redraw; clock checked once per second instead of every 100 ms.
+- DIAG line also shows the CPU clock and the battery current (mA) to compare
+  the power use.
+
 ## v2.0.0-dev9 – 2026-10-18 (in development)
 
 - Automatic switch-off when the device battery stays below 5 % for 30 s

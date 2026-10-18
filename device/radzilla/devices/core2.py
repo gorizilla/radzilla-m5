@@ -12,6 +12,7 @@
 #   set_brightness(v)            0..255
 #   battery()                    (percent or None, "bat" / "chg" / "full")
 #   power_off()                  switch the device off
+#   cpu_mhz(), bat_ma            CPU clock and last battery current (DIAG)
 #   now()                        ((Y, M, D, h, m, s), valid)
 #   set_volume(pct), tone(hz, ms)
 #   vibrate(level)               vibration motor 0..255
@@ -58,6 +59,12 @@ class Device:
 
     def __init__(self, cfg):
         self.c = cfg
+        self.bat_ma = None                  # last battery current (mA), for DIAG
+        try:                                # CPU clock (UIFlow default 240 MHz)
+            import machine
+            machine.freq(cfg.CPU_MHZ * 1_000_000)
+        except Exception as e:
+            print("core2: freq:", repr(e))
         M5.begin()
         Lcd.setTextSize(1)              # reset leftovers from other programs
         self.lcd = Lcd
@@ -118,6 +125,7 @@ class Device:
 
         charging = bool(call("isCharging"))
         ma = call("getBatteryCurrent")
+        self.bat_ma = ma
         mv = call("getBatteryVoltage")
         cable = charging or (ma is not None and ma > -self.c.BAT_CABLE_MA)
         if cable and not charging:
@@ -134,6 +142,13 @@ class Device:
         else:
             self._bat_mv += 0.2 * (rest - self._bat_mv)      # smooth
         return _lipo_pct(self._bat_mv), ("chg" if cable else "bat")
+
+    def cpu_mhz(self):
+        try:
+            import machine
+            return machine.freq() // 1_000_000
+        except Exception:
+            return 0
 
     def power_off(self):
         """Switch the whole device off (power button switches it on again)."""

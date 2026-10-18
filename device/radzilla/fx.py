@@ -36,6 +36,7 @@ class FX:
         self.last_leds = None         # (colours, level) last sent
         self.last_vib = None
         self.geiger_clicks = []
+        self._ev = asyncio.Event()  # set when an effect starts (idle task sleeps until then)
         if cfg.FX_PRELOAD:
             for n in ("siren_dose.wav", "siren_danger.wav"):
                 self._load(n)
@@ -66,6 +67,7 @@ class FX:
         if self.cur is not None and self.cur[0] >= P_HIGH:
             self.dev.stop_sound()               # a higher alarm replaces a sound
         self.cur = (prio, time.ticks_ms(), frame, length_ms)
+        self._ev.set()
         return True
 
     def _run_leds(self, el, col, step):
@@ -189,10 +191,16 @@ class FX:
 
     async def task(self):
         while True:
+            cur = self.cur
+            if cur is None:                     # idle: LEDs off, sleep until an effect starts
+                self._output([OFF] * N_LED, 0)
+                self._ev.clear()
+                if self.cur is None:
+                    await self._ev.wait()
+                continue
             await asyncio.sleep_ms(20)
             cur = self.cur
             if cur is None:
-                self._output([OFF] * N_LED, 0)
                 continue
             prio, t0, frame, length = cur
             el = time.ticks_diff(time.ticks_ms(), t0)

@@ -105,7 +105,7 @@ def build_view():
     v.time_str = "%02d:%02d" % (t[3], t[4]) if valid else "--:--"
     v.rc_txt = "RC %d%%" % S.batt if (S.connected and S.batt is not None) else "RC --"
     v.rc_connected = S.connected
-    v.batt_pct, v.batt_mode = DEV.battery()
+    v.batt_pct, v.batt_mode = BATT
     v.batt_col = gfx.GREEN if (v.batt_mode != "bat" or v.batt_pct is None or v.batt_pct > 20) else gfx.RED
     if v.batt_pct is None:
         v.batt_txt = "--"
@@ -209,15 +209,20 @@ class Light:
 LIGHT = None
 FX = None
 DIAG = {"draws": 0, "last_ms": 0, "max_ms": 0}
+BATT = [None, "bat"]                    # device battery (pct, mode), read every BAT_READ_S
 
 
 async def display_task():
     last_min = None
+    last_clock = None
     while True:
-        t, _ = DEV.now()
-        if t[4] != last_min:                 # clock changed
-            last_min = t[4]
-            S.dirty = True
+        now = time.ticks_ms()
+        if last_clock is None or time.ticks_diff(now, last_clock) >= 1000:
+            last_clock = now                 # check the clock once per second
+            t, _ = DEV.now()
+            if t[4] != last_min:             # minute changed
+                last_min = t[4]
+                S.dirty = True
         if S.overlay is not None and time.ticks_diff(S.overlay_until, time.ticks_ms()) <= 0:
             S.dirty = True                   # overlay expired
         if S.modal:                          # a SET dialog owns the display
@@ -279,8 +284,11 @@ async def power_task():
     battery from deep discharge). Warning with countdown, the log is saved."""
     low_since = None
     while True:
-        await asyncio.sleep_ms(1000)
-        pct, mode = DEV.battery()
+        await asyncio.sleep_ms(C.BAT_READ_S * 1000)
+        pct, mode = DEV.battery()            # the only place that reads the battery
+        if [pct, mode] != BATT:
+            BATT[0], BATT[1] = pct, mode
+            S.dirty = True
         if mode != "bat" or pct is None or pct >= C.BAT_OFF_PCT:
             low_since = None
             continue
@@ -349,7 +357,7 @@ async def input_task():
                     toggle_bt()
         except Exception as e:
             print("Input error:", repr(e))
-        await asyncio.sleep_ms(20)
+        await asyncio.sleep_ms(C.INPUT_DIM_MS if LIGHT.dimmed else C.INPUT_MS)
 
 
 # ---------- WiFi, time sync, SET dialogs ---------------------------------------------------
@@ -555,8 +563,10 @@ async def diag_task():
     while True:
         await asyncio.sleep_ms(5000)
         print("DIAG page=%d usv=%s cps=%s lvl=%d dose=%.3f draws=%d draw=%dms (max %d) free=%dKB"
+              " cpu=%dMHz bat=%s%% %s %smA"
               % (S.page, S.usv, S.cps, S.level, S.dose_total, DIAG["draws"],
-                 DIAG["last_ms"], DIAG["max_ms"], gc.mem_free() // 1024))
+                 DIAG["last_ms"], DIAG["max_ms"], gc.mem_free() // 1024,
+                 DEV.cpu_mhz(), BATT[0], BATT[1], DEV.bat_ma))
         DIAG["max_ms"] = 0
 
 
@@ -668,6 +678,7 @@ async def main():
     NETS = wificfg.load()
     SYNC["last"] = _load_lastsync()
     LOG = Logger(C, DEV.sd_mounted)
+    BATT[0], BATT[1] = DEV.battery()
     LIGHT = Light()
     FX = fx.FX(DEV, C)
     print("RadZilla M5 v%s on %s, log: %s" % (C.VERSION, DEV.NAME, LOG.dir))
