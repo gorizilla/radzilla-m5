@@ -75,9 +75,9 @@ generated with random spacing like a real counter.
 
 | CPS | clicks/s | volume (dimmed) | sound |
 |---|---|---|---|
-| up to 50 (search range) | 1:1 | 40 → 48 % (20 → 24 %) | soft tick, pitch rises slightly |
-| 50 → 300 (≈ DANGER) | 50 → 70 | 48 → 58 % | harder |
-| 300 → 30 000 (end of range) | 70 → 100 | 58 → 70 % (max. 35 %) | clicks turn into a subtle monotone scream (timbre of the DANGER siren) |
+| up to 50 (search range) | 1:1 | 50 → 58 % (38 → 44 %) | soft tick, pitch rises slightly |
+| 50 → 300 (≈ DANGER) | 50 → 70 | 58 → 68 % (44 → 51 %) | harder |
+| 300 → 30 000 (end of range) | 70 → 100 | 68 → 80 % (51 → 60 %) | clicks turn into a subtle monotone scream (timbre of the DANGER siren) |
 
 RC-102: ~30 CPS per µSv/h (Cs-137). Paused while an alarm sound plays.
 Stored in `/flash/radzilla/settings.json`. Tables `CLICK_*` in `config.py`.

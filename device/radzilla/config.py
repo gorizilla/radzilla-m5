@@ -7,7 +7,7 @@
 # ⚠ Experimental: thresholds and conversion factor are not calibrated –
 #   see NOTICE.md. Not a safety device.
 
-VERSION = "2.0.0-dev13"
+VERSION = "2.0.0-dev14"
 DEVICE = "core2"            # hardware module in devices/ (later also "stopwatch")
 DIAG = False                # True: print a status line to the shell every 5 s
                             # (incl. CPU clock and battery current to compare power use)
@@ -176,8 +176,8 @@ GEIGER_FREQ_HZ = 3000
 CLICK_ON = False            # default before the first switch
 CLICK_LIVE_CPS = 50         # search range: clicks 1:1 with the CPS up to here
 CLICK_RATE_TABLE = ((50, 50), (300, 70), (30000, 100))          # clicks/s above
-CLICK_VOL_TABLE = ((3, 40), (50, 48), (300, 58), (30000, 70))   # volume % (max. 70)
-CLICK_DIM_FACTOR = 0.5      # volume while the display is dimmed (20..35 %)
+CLICK_VOL_TABLE = ((3, 50), (50, 58), (300, 68), (30000, 80))   # volume % (max. 80)
+CLICK_DIM_FACTOR = 0.75     # volume while the display is dimmed (38..60 %)
 CLICK_PITCH_TABLE = ((3, 1000), (50, 1800), (300, 2800), (30000, 3200))  # click Hz
 CLICK_HARD_TABLE = ((3, 0.0), (50, 0.25), (300, 0.7), (30000, 1.0))    # soft tick -> sharp crack
 CLICK_SCREAM_TABLE = ((300, 0.0), (30000, 1.0))   # above DANGER the clicks start to scream

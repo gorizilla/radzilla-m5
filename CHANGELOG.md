@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.0.0-dev14 – 2026-10-18 (in development)
+
+- Counter clicks louder (tested on the device): volume 50 -> 80 %,
+  dimmed x 0.75 (38 -> 60 %).
+
 ## v2.0.0-dev13 – 2026-10-18 (in development)
 
 - Counter clicks reworked for source finding (16 kHz):
