@@ -25,8 +25,6 @@ from radzilla.core import state as st
 from radzilla.core import trend, dose, alarms
 from radzilla.core.logger import Logger
 from radzilla import fx
-from radzilla import clicker
-from radzilla.core import settings
 from radzilla.core import timesync, wificfg
 from radzilla.ui import gfx, splash
 
@@ -211,7 +209,6 @@ class Light:
 LIGHT = None
 FX = None
 DIAG = {"draws": 0, "last_ms": 0, "max_ms": 0}
-SETTINGS = {}
 BATT = [None, "bat"]                    # device battery (pct, mode), read every BAT_READ_S
 
 
@@ -281,13 +278,26 @@ async def _vibrate(ms):
     DEV.vibrate(0)
 
 
-def toggle_click():
-    """Counter clicks on / off (stored); confirmation: one short vibration."""
-    S.click_on = not S.click_on
-    SETTINGS["click"] = S.click_on
-    settings.save(SETTINGS)
-    print("Clicks", "on" if S.click_on else "off")
-    asyncio.create_task(_vibrate(C.BT_VIB_MS))
+async def rc_request(rc):
+    """Run a request from the symbol (one BLE command at a time, from the
+    read loop): "ticker" (CPS page) or "spreset" (RATE page). Success:
+    one vibration (+ "SP RESET OK"); failure: nothing."""
+    req, S.rc_req = S.rc_req, None
+    try:
+        if req == "ticker":
+            ok = await rc.toggle_ticker()
+        elif req == "spreset":
+            ok = await rc.spectrum_reset()
+        else:
+            return
+    except Exception as e:
+        print("RadiaCode %s: %r" % (req, e))
+        return
+    print("RadiaCode %s: %s" % (req, "ok" if ok else "failed"))
+    if ok:
+        asyncio.create_task(_vibrate(C.BT_VIB_MS))
+        if req == "spreset":
+            S.show_overlay(["SP RESET OK"], C.SP_RESET_MSG_MS)
 
 
 async def power_task():
@@ -347,8 +357,14 @@ async def input_task():
                         splash.skip()
                     continue
                 if isinstance(e, tuple) and e[0] == "hold":
-                    if S.page == st.PAGE_CPS and not S.modal and PAGES.cps_symbol_at(e[1], e[2]):
-                        toggle_click()
+                    # large radiation symbol held 2 s: CPS page = RC ticker,
+                    # RATE page = restart the RC spectrum (needs a connection)
+                    if not S.modal and S.connected and S.bt_on and \
+                            PAGES.cps_symbol_at(e[1], e[2]):
+                        if S.page == st.PAGE_CPS:
+                            S.rc_req = "ticker"
+                        elif S.page == st.PAGE_RATE:
+                            S.rc_req = "spreset"
                     continue
                 if e == "active":
                     LIGHT.wake()
@@ -678,6 +694,8 @@ async def rc_loop():
                 if alarms.update_level(S, C):
                     LIGHT.wake()                 # alarm started / escalated
                 await alarms.play_rc_signal(S, C, rc)
+                if S.rc_req:
+                    await rc_request(rc)
                 S.dirty = True
                 await asyncio.sleep_ms(C.RC_POLL_MS)
         except Exception as e:
@@ -701,8 +719,6 @@ async def main():
     SYNC["last"] = _load_lastsync()
     LOG = Logger(C, DEV.sd_mounted)
     BATT[0], BATT[1] = DEV.battery()
-    SETTINGS.update(settings.load(C))
-    S.click_on = bool(SETTINGS.get("click"))
     LIGHT = Light()
     FX = fx.FX(DEV, C)
     print("RadZilla M5 v%s on %s, log: %s" % (C.VERSION, DEV.NAME, LOG.dir))
@@ -718,7 +734,6 @@ async def main():
     asyncio.create_task(alarms.task(FX, S, C))
     asyncio.create_task(sync_task())
     asyncio.create_task(power_task())
-    asyncio.create_task(clicker.Clicker(DEV, C).task(S, FX, LIGHT, st.PAGE_CPS))
     if C.DIAG:
         asyncio.create_task(diag_task())
     await rc

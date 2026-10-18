@@ -27,10 +27,15 @@ CMD_SET_EXCHANGE = 0x0007
 CMD_GET_VERSION = 0x000A
 CMD_WR_VIRT_SFR = 0x0825
 CMD_RD_VIRT_STRING = 0x0826
+CMD_WR_VIRT_STRING = 0x0827
+CMD_RD_VIRT_SFR_BATCH = 0x082A
 VS_DATA_BUF = 0x0100
 VS_SERIAL_NUMBER = 0x0008
 VSFR_DEVICE_TIME = 0x0504
 VSFR_PLAY_SIGNAL = 0x05E1  # write only; tested on RC-102 firmware, see below
+VSFR_SOUND_CTRL = 0x0520   # bit 1 = ticker (clicks), tested RC-102 FW 4.14: 0x0303 on / 0x0301 off
+VS_SPECTRUM = 0x0200       # current spectrum (reset = write with length 0)
+TICKER_BIT = 0x02
 
 CHUNK = 18                 # write chunk size (as in the Python library)
 
@@ -172,6 +177,35 @@ class RadiaCode:
         r = await self.execute(CMD_WR_VIRT_SFR,
                                struct.pack("<II", VSFR_PLAY_SIGNAL, 1))
         return struct.unpack("<I", r[:4])[0] == 1
+
+    # ---- the only settings RadZilla changes (on request of the user) ----
+    async def read_vsfr(self, reg):
+        """Raw 32-bit value of one register, or None."""
+        r = await self.execute(CMD_RD_VIRT_SFR_BATCH, struct.pack("<II", 1, reg))
+        if len(r) < 8:
+            return None
+        flags, value = struct.unpack("<II", r[:8])
+        return value if flags & 1 else None
+
+    async def toggle_ticker(self):
+        """Switch only the ticker (clicks) of the RadiaCode on / off: read
+        SOUND_CTRL, flip bit 1, write, read back. All other bits (alarm
+        sounds, buttons) stay exactly as read. Nothing is written if the
+        read fails. Returns True when the new value was verified."""
+        v = await self.read_vsfr(VSFR_SOUND_CTRL)
+        if v is None:
+            return False
+        new = v ^ TICKER_BIT
+        r = await self.execute(CMD_WR_VIRT_SFR, struct.pack("<II", VSFR_SOUND_CTRL, new))
+        if len(r) < 4 or struct.unpack("<I", r[:4])[0] != 1:
+            return False
+        return await self.read_vsfr(VSFR_SOUND_CTRL) == new
+
+    async def spectrum_reset(self):
+        """Restart the current spectrum of the RadiaCode (the accumulated
+        spectrum is not touched). Returns True if the device confirms."""
+        r = await self.execute(CMD_WR_VIRT_STRING, struct.pack("<II", VS_SPECTRUM, 0))
+        return len(r) >= 4 and struct.unpack("<I", r[:4])[0] == 1
 
     async def read_data(self):
         """Read the data buffer. Returns a dict with the latest values:

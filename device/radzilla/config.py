@@ -7,7 +7,7 @@
 # ⚠ Experimental: thresholds and conversion factor are not calibrated –
 #   see NOTICE.md. Not a safety device.
 
-VERSION = "2.0.0-dev18"
+VERSION = "2.0.0-dev19"
 DEVICE = "core2"            # hardware module in devices/ (later also "stopwatch")
 DIAG = False                # True: print a status line to the shell every 5 s
                             # (incl. CPU clock and battery current to compare power use)
@@ -47,7 +47,7 @@ TAP_MOVE_PX = 20            # ... and moves less than this
 DOUBLE_TAP_MS = 400         # max. gap between the two taps of a double tap
 SWIPE_PX = 60               # min. horizontal movement of a swipe
 B_HOLD_MS = 2000            # B held this long = Bluetooth off / on
-TOUCH_HOLD_MS = 2000        # radiation symbol on the CPS page held this long = clicks on / off
+TOUCH_HOLD_MS = 2000        # radiation symbol held this long: CPS = RC ticker, RATE = spectrum reset
 BT_VIB_LEVEL = 200          # confirmation vibration (0..255) ...
 BT_VIB_MS = 150             # ... and its length
 
@@ -167,26 +167,16 @@ GEIGER_RATE_HZ = 12
 GEIGER_CLICK_MS = 3
 GEIGER_FREQ_HZ = 3000
 
-# --- Counter clicks (CPS page) -------------------------------------------------------
-# Clicks with the count rate, only on the CPS page. On / off: hold the large
-# radiation symbol for 2 s (vibration); stored in /flash/radzilla/settings.json.
-# The RadiaCode sends the rate once per second, the clicks are spaced randomly.
-# Tables: (CPS, value), logarithmic in between. RC-102: ~30 CPS per µSv/h (Cs-137)
-# -> DANGER 10 µSv/h ≈ 300 CPS, end of the range 1000 µSv/h ≈ 30 000 CPS.
-CLICK_ON = False            # default before the first switch
-CLICK_LIVE_CPS = 50         # search range: clicks 1:1 with the CPS up to here
-CLICK_RATE_TABLE = ((50, 50), (300, 70), (30000, 100))          # clicks/s above
-CLICK_VOL_TABLE = ((3, 50), (50, 58), (300, 68), (30000, 80))   # volume % (max. 80)
-CLICK_DIM_FACTOR = 0.75     # volume while the display is dimmed (38..60 %)
-CLICK_PITCH_TABLE = ((3, 1000), (50, 1800), (300, 2800), (30000, 3200))  # click Hz
-CLICK_HARD_TABLE = ((3, 0.0), (50, 0.25), (300, 0.7), (30000, 1.0))    # soft tick -> sharp crack
-CLICK_SCREAM_TABLE = ((300, 0.0), (30000, 1.0))   # above DANGER the clicks start to scream
-CLICK_SCREAM_HZ = 700       # monotone, in the timbre of the DANGER siren
-CLICK_SCREAM_MIX = 0.22     # subtle
+# --- Radiation symbol held 2 s (needs the RadiaCode connection) -----------------------
+# CPS page:  ticker (clicks) of the RadiaCode on / off – only this bit of its
+#            sound settings is changed; one vibration when done.
+# RATE page: restart the current spectrum of the RadiaCode; vibration +
+#            "SP RESET OK". Nothing happens if it fails.
+SP_RESET_MSG_MS = 2000
 
 # --- RadiaCode signal (the RadiaCode itself beeps / vibrates) ---------------------
 # On HIGH / DANGER start the RadiaCode plays its short alarm (3 beeps + vibration).
-# Only value 1 is ever sent; nothing is changed in the RadiaCode settings.
+# Only value 1 is ever sent.
 RC_SIGNAL_ON = True
 RC_SIGNAL_HIGH_COUNT = 1
 RC_SIGNAL_DANGER_COUNT = 2

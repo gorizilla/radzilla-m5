@@ -57,7 +57,7 @@ it is started by hand from Thonny – nothing is changed on the device
 | button A / C | previous / next page |
 | button B | DOSE page |
 | hold button B (2 s) | Bluetooth to the RadiaCode off / on – while off: no readings, no alarms, no log; always on after a restart |
-| hold the large radiation symbol on the CPS page (2 s) | counter clicks on / off (one vibration); stored |
+| hold the large radiation symbol (2 s) | CPS page: RadiaCode ticker on / off; RATE page: restart the RadiaCode spectrum ("SP RESET OK") |
 
 ### LED heartbeat
 
@@ -67,20 +67,21 @@ once its beeps / siren are over. The colour follows the dose rate:
 green up to 0.12 µSv/h, slightly yellow-green up to 0.18, towards yellow
 up to 0.20; HIGH yellow -> orange -> nearly red up to 10; DANGER and DOSE red.
 
-### Counter clicks
+### Radiation symbol: RadiaCode ticker and spectrum
 
-Clicks with the count rate, only on the CPS page – usable as a source
-finder. The RadiaCode sends the rate once per second, so the clicks are
-generated with random spacing like a real counter.
+Hold the large radiation symbol for 2 s (RadiaCode connected):
 
-| CPS | clicks/s | volume (dimmed) | sound |
-|---|---|---|---|
-| up to 50 (search range) | 1:1 | 50 → 58 % (38 → 44 %) | soft tick, pitch rises slightly |
-| 50 → 300 (≈ DANGER) | 50 → 70 | 58 → 68 % (44 → 51 %) | harder |
-| 300 → 30 000 (end of range) | 70 → 100 | 68 → 80 % (51 → 60 %) | clicks turn into a subtle monotone scream (timbre of the DANGER siren) |
+- **CPS page:** the ticker (clicks) of the RadiaCode on / off – one vibration.
+  Only the ticker bit of the RadiaCode sound settings is changed (register
+  SOUND_CTRL 0x0520, bit 1, read – change – write – read back); its alarm
+  sounds and the overall sound stay as they are. The setting is stored in
+  the RadiaCode, as when it is changed in the app.
+- **RATE page:** restart the current spectrum of the RadiaCode – vibration
+  and "SP RESET OK". The accumulated spectrum is not touched. Save a
+  spectrum you want to keep in the app first.
 
-RC-102: ~30 CPS per µSv/h (Cs-137). Paused while an alarm sound plays.
-Stored in `/flash/radzilla/settings.json`. Tables `CLICK_*` in `config.py`.
+If it fails (e.g. connection lost) nothing happens. Apart from these two
+actions and its short alarm signal, RadZilla only reads from the RadiaCode.
 
 ## Battery empty
 

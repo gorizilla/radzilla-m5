@@ -1,5 +1,19 @@
 # Changelog
 
+## v2.0.0-dev19 – 2026-10-18 (in development)
+
+- Own counter clicks removed (`clicker.py`, `CLICK_*`, `settings.json`).
+- CPS page: holding the radiation symbol 2 s switches the **ticker of the
+  RadiaCode** on / off – only bit 1 of SOUND_CTRL (0x0520) is changed
+  (read, flip, write, read back; tested RC-102 FW 4.14: 0x0303 on / 0x0301
+  off); one vibration when verified, nothing on failure.
+- RATE page: holding the radiation symbol 2 s restarts the **current
+  spectrum** of the RadiaCode (WR_VIRT_STRING 0x0827, SPECTRUM 0x0200);
+  vibration + "SP RESET OK" for 2 s, nothing on failure.
+- tools/rz_rc_regs.py: read-only dump of the RadiaCode sound / light / alarm
+  registers.
+- Everything else as in dev18.
+
 ## v2.0.0-dev18 – 2026-10-18 (in development)
 
 - Counter clicks lighter on the CPU: the click sound is only rebuilt when
