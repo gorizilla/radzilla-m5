@@ -28,7 +28,7 @@ RadiaCode devices or with M5Stack.
 - **Controls**: double tap or swipe on the display, buttons A / C = page,
   B = DOSE page, hold B = Bluetooth off / on.
 - **Auto-dim** after 90 s, wakes on touch, buttons or an alarm.
-- **Counter clicks** on the CPS page (hold the radiation symbol 2 s), scaled from a few clicks to 60 per second.
+- **Counter clicks** on the CPS page (hold the radiation symbol 2 s), 1:1 up to 50 CPS for source finding, louder and harder above, a subtle scream above DANGER.
 - **CSV log** on the microSD card (fallback: internal flash), 7 days; on / off with `LOG` on the SET page.
 - **Splash**, synced **sirens / LEDs / vibration**, **autostart**.
 - **SET page**: WiFi via on-screen keyboard or phone, time sync with the

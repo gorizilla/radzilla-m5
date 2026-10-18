@@ -69,11 +69,18 @@ up to 0.20; HIGH yellow -> orange -> nearly red up to 10; DANGER and DOSE red.
 
 ### Counter clicks
 
-Quiet clicks with the count rate, only on the CPS page (20 %, dimmed 13 %).
-The RadiaCode sends the rate once per second, so the clicks are generated
-with random spacing like a real counter: 1:1 up to 5 CPS, above
-logarithmic (100 CPS -> 20 clicks/s, from 10 000 CPS 60 clicks/s). Paused
-while an alarm sound plays. Stored in `/flash/radzilla/settings.json`.
+Clicks with the count rate, only on the CPS page – usable as a source
+finder. The RadiaCode sends the rate once per second, so the clicks are
+generated with random spacing like a real counter.
+
+| CPS | clicks/s | volume (dimmed) | sound |
+|---|---|---|---|
+| up to 50 (search range) | 1:1 | 40 → 48 % (20 → 24 %) | soft tick, pitch rises slightly |
+| 50 → 300 (≈ DANGER) | 50 → 70 | 48 → 58 % | harder |
+| 300 → 30 000 (end of range) | 70 → 100 | 58 → 70 % (max. 35 %) | clicks turn into a subtle monotone scream (timbre of the DANGER siren) |
+
+RC-102: ~30 CPS per µSv/h (Cs-137). Paused while an alarm sound plays.
+Stored in `/flash/radzilla/settings.json`. Tables `CLICK_*` in `config.py`.
 
 ## Battery empty
 

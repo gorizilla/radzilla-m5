@@ -1,6 +1,11 @@
 # splash.py – start screen: atom (radiation symbol as core, three orbits,
-# green electrons), "RadZilla", version, copyright; jingle with LED flashes
-# and vibration on every Geiger click. A tap skips it.
+# green electrons), "RadZilla", version, copyright; jingle with LED
+# animation and vibration on every Geiger click. A tap skips it.
+#
+# LEDs (own task, steady 25 ms steps, independent of drawing): three dim
+# green dots circle the 10 LEDs with the electrons; every click flashes all
+# LEDs and fades out (~150 ms), colour green -> yellow -> orange -> red over
+# the jingle; after the last click red, then a soft fade-out.
 #
 # RadZilla M5 – external display for RadiaCode
 # Copyright (c) 2026 Shimizilla – license: see LICENSE.md
@@ -37,6 +42,58 @@ def _ramp(c, f):
     k = f - i
     a, b = stops[i], stops[i + 1]
     return tuple(int(a[j] + (b[j] - a[j]) * k) for j in range(3))
+
+
+def _led_frame(c, el, ci, clicks):
+    """LED colours at el ms; ci = clicks already played."""
+    n = len(clicks)
+    last = clicks[-1] if n else 0
+    leds = [(0, 0, 0)] * 10
+    if el < last:                                    # three dots circle with the atom
+        pos = (el * DEG_PER_MS / 36.0) % 10          # 36° per LED
+        gr = c.LED_GREEN
+        for k in range(3):
+            p = (pos + k * 10 / 3) % 10
+            i = int(p)
+            f = p - i
+            for j, w in ((i, 1 - f), ((i + 1) % 10, f)):
+                a = 0.35 * w
+                old = leds[j]
+                leds[j] = (max(old[0], int(gr[0] * a)), max(old[1], int(gr[1] * a)),
+                           max(old[2], int(gr[2] * a)))
+    if ci:
+        d = el - clicks[ci - 1]
+        col = _ramp(c, (ci - 1) / max(1, n - 1))
+        if ci == n:                                  # last click: red, hold, fade out
+            k = 1.0 if d < c.SPLASH_HOLD_MS else max(0.0, 1 - (d - c.SPLASH_HOLD_MS) / c.SPLASH_FADE_MS)
+        else:
+            k = max(0.0, 1 - d / c.SPLASH_FLASH_MS)
+        if k > 0:
+            leds = [(int(b[0] + (col[0] - b[0]) * k), int(b[1] + (col[1] - b[1]) * k),
+                     int(b[2] + (col[2] - b[2]) * k)) for b in leds]
+    return leds
+
+
+async def _led_task(dev, c, t0):
+    clicks = c.SPLASH_CLICKS
+    ci = 0
+    vib_off = None
+    while True:
+        el = time.ticks_diff(time.ticks_ms(), t0)
+        new = ci
+        while new < len(clicks) and el >= clicks[new]:
+            new += 1
+        if new != ci:
+            ci = new
+            if c.VIB_ON:
+                dev.vibrate(c.SPLASH_VIB_LEVEL)
+                vib_off = el + c.SPLASH_VIB_MS
+        if vib_off is not None and el >= vib_off:
+            vib_off = None
+            dev.vibrate(0)
+        if c.LED_ON:
+            dev.leds(_led_frame(c, el, ci, clicks))
+        await asyncio.sleep_ms(25)
 
 
 def active():
@@ -114,10 +171,9 @@ async def run(dev, c, version):
             print("splash: sound:", repr(e))
 
     clicks = c.SPLASH_CLICKS
-    ci = 0
-    flash_off = None
     old = []
     t0 = time.ticks_ms()
+    led = asyncio.create_task(_led_task(dev, c, t0))
     try:
         while not _skip[0]:
             el = time.ticks_diff(time.ticks_ms(), t0)
@@ -135,21 +191,9 @@ async def run(dev, c, version):
                 g.fillCircle(x, y, E_R, ELECTRON)
             _draw_core(g)                            # core in front of the orbits
             old = new
-            # clicks -> LED flash + vibration
-            if ci < len(clicks) and el >= clicks[ci]:
-                while ci < len(clicks) and el >= clicks[ci]:
-                    ci += 1
-                if c.LED_ON:                         # green -> yellow -> orange -> red
-                    dev.leds([_ramp(c, (ci - 1) / max(1, len(clicks) - 1))] * 10)
-                if c.VIB_ON:
-                    dev.vibrate(c.SPLASH_VIB_LEVEL)
-                flash_off = el + c.SPLASH_VIB_MS
-            if flash_off is not None and el >= flash_off:
-                flash_off = None
-                dev.leds([(0, 0, 0)] * 10)
-                dev.vibrate(0)
             await asyncio.sleep_ms(30)
     finally:
+        led.cancel()
         if _skip[0]:
             dev.stop_sound()
         dev.leds([(0, 0, 0)] * 10)

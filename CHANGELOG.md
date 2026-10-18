@@ -1,5 +1,17 @@
 # Changelog
 
+## v2.0.0-dev13 – 2026-10-18 (in development)
+
+- Counter clicks reworked for source finding (16 kHz):
+  - up to 50 CPS 1:1 with the count rate, soft tick, pitch rises slightly
+  - 50 -> 300 CPS (≈ DANGER for Cs-137) denser (up to 70/s) and harder
+  - above, the clicks turn into a subtle monotone scream in the timbre of
+    the DANGER siren, max. 100 clicks/s at 30 000 CPS (end of the RC-102 range)
+  - volume 40 -> 70 % (dimmed half: 20 -> 35 %), logarithmic
+- Splash LEDs smooth: own 25 ms task independent of drawing; three dim
+  green dots circle with the electrons, every click flashes and fades out
+  (green -> yellow -> orange -> red), red at the end with a soft fade-out.
+
 ## v2.0.0-dev12 – 2026-10-18 (in development)
 
 - Fix: during a HIGH / DANGER / DOSE alarm the LEDs stayed dark after the

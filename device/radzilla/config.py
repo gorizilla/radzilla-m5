@@ -7,7 +7,7 @@
 # ⚠ Experimental: thresholds and conversion factor are not calibrated –
 #   see NOTICE.md. Not a safety device.
 
-VERSION = "2.0.0-dev12"
+VERSION = "2.0.0-dev13"
 DEVICE = "core2"            # hardware module in devices/ (later also "stopwatch")
 DIAG = False                # True: print a status line to the shell every 5 s
                             # (incl. CPU clock and battery current to compare power use)
@@ -101,7 +101,10 @@ SPLASH_MS = 4100            # length (the jingle lasts 4.0 s); a tap skips it
 SPLASH_CLICKS = (1200, 1425, 1593, 1702, 1742, 2005, 2279, 2399, 2516, 2561,
                  2639, 2786, 3061, 3105, 3149)   # Geiger clicks in the jingle (ms)
 SPLASH_VIB_LEVEL = 200      # vibration on every click ...
-SPLASH_VIB_MS = 20          # ... and LED flash length
+SPLASH_VIB_MS = 20          # ... and its length
+SPLASH_FLASH_MS = 150       # LED flash per click fades out in this time
+SPLASH_HOLD_MS = 300        # after the last click: red for this long ...
+SPLASH_FADE_MS = 600        # ... then fade out
 
 # --- LEDs (10x SK6812 on the M5GO Bottom2) --------------------------------------------
 LED_ON = True
@@ -165,15 +168,21 @@ GEIGER_CLICK_MS = 3
 GEIGER_FREQ_HZ = 3000
 
 # --- Counter clicks (CPS page) -------------------------------------------------------
-# Quiet clicks with the count rate, only on the CPS page. On / off: hold the
-# large radiation symbol for 2 s (vibration); stored in /flash/radzilla/settings.json.
+# Clicks with the count rate, only on the CPS page. On / off: hold the large
+# radiation symbol for 2 s (vibration); stored in /flash/radzilla/settings.json.
 # The RadiaCode sends the rate once per second, the clicks are spaced randomly.
+# Tables: (CPS, value), logarithmic in between. RC-102: ~30 CPS per µSv/h (Cs-137)
+# -> DANGER 10 µSv/h ≈ 300 CPS, end of the range 1000 µSv/h ≈ 30 000 CPS.
 CLICK_ON = False            # default before the first switch
-CLICK_VOLUME_PCT = 20
-CLICK_DIM_VOLUME_PCT = 13   # while the display is dimmed
-# (CPS, clicks/s): up to the first entry 1:1 (proportional), above logarithmic, max. 60/s
-CLICK_TABLE = ((5, 5), (10, 8), (20, 11), (50, 16), (100, 20), (300, 28),
-               (1000, 38), (3000, 49), (10000, 60))
+CLICK_LIVE_CPS = 50         # search range: clicks 1:1 with the CPS up to here
+CLICK_RATE_TABLE = ((50, 50), (300, 70), (30000, 100))          # clicks/s above
+CLICK_VOL_TABLE = ((3, 40), (50, 48), (300, 58), (30000, 70))   # volume % (max. 70)
+CLICK_DIM_FACTOR = 0.5      # volume while the display is dimmed (20..35 %)
+CLICK_PITCH_TABLE = ((3, 1000), (50, 1800), (300, 2800), (30000, 3200))  # click Hz
+CLICK_HARD_TABLE = ((3, 0.0), (50, 0.25), (300, 0.7), (30000, 1.0))    # soft tick -> sharp crack
+CLICK_SCREAM_TABLE = ((300, 0.0), (30000, 1.0))   # above DANGER the clicks start to scream
+CLICK_SCREAM_HZ = 700       # monotone, in the timbre of the DANGER siren
+CLICK_SCREAM_MIX = 0.22     # subtle
 
 # --- RadiaCode signal (the RadiaCode itself beeps / vibrates) ---------------------
 # On HIGH / DANGER start the RadiaCode plays its short alarm (3 beeps + vibration).
