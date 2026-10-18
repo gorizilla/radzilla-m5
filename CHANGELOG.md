@@ -1,5 +1,19 @@
 # Changelog
 
+## v2.0.0-dev17 – 2026-10-18 (in development)
+
+Based on dev14 (felt the best on the device); dev15 / dev16 are dropped:
+no year dose ring, RadiaCode read every 1 s and clicks in 1 s chunks again
+(0.5 s felt slower).
+- Fix: empty RadiaCode records (rate and CPS exactly 0) are ignored
+  (display, alarms, dose, log).
+- Log: lines on a fixed 5 s grid of the clock; uSv/h and Dose15 with
+  3 decimals.
+- Alarms always first: LED runs (HIGH, heartbeat) are no longer lost when
+  the program is held up (e.g. by a page redraw) – they continue where they
+  stopped instead of skipping steps; sirens keep following their sound.
+- The dose gap limit no longer depends on the poll interval.
+
 ## v2.0.0-dev16 – 2026-10-18 (in development)
 
 - Fix: with dev15 no readings arrived although connected (the zero filter

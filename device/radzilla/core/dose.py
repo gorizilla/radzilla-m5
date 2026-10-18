@@ -19,7 +19,6 @@ def add(S, C, usv, now):
     S.dose_hist.append((now, inc))
     S.dose_total += inc
     S.extra_total += max(0.0, usv - C.BACKGROUND_USV) * dt / 3_600_000
-    S.year_usv += inc
     trim(S, C, now)
 
 

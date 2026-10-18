@@ -7,7 +7,7 @@
 # ⚠ Experimental: thresholds and conversion factor are not calibrated –
 #   see NOTICE.md. Not a safety device.
 
-VERSION = "2.0.0-dev16"
+VERSION = "2.0.0-dev17"
 DEVICE = "core2"            # hardware module in devices/ (later also "stopwatch")
 DIAG = False                # True: print a status line to the shell every 5 s
                             # (incl. CPU clock and battery current to compare power use)
@@ -58,7 +58,7 @@ RC_NAME = ""
 RC_NAME_PREFIX = "RadiaCode"
 RC_SCAN_MS = 5000           # scan time per attempt
 RC_RECONNECT_MS = 5000      # pause before the next attempt
-RC_POLL_MS = 500            # read interval (the RadiaCode updates every 0.5 s)
+RC_POLL_MS = 1000           # read interval
 RC_STALE_MS = 5000          # no new values for this long -> show "--"
 RC_SHOW_INFO = True         # show name, serial number and firmware after connecting
 RC_INFO_MS = 2000           # ... for this long
@@ -88,14 +88,6 @@ DOSE_LIMIT_USV = 2.5
 #   yellow < RING_WARN_PCT, orange < 100 %, red from 100 % (= DOSE alarm).
 # Inner ring (blue): extra dose today above BACKGROUND_USV in % of
 #   DAILY_BUDGET_USV (2.7 µSv/day ≈ 1 mSv/year) – information only.
-# Year dose (thin violet ring + value in the centre instead of the symbol):
-# whole measured dose incl. background this calendar year, stored in
-# /flash/radzilla/yeardose.json, reset at the new year (valid clock needed).
-YEAR_ON = True
-YEAR_FULL_USV = 1000.0      # ring full at 1 mSv
-YEAR_HIDE_S = 15            # symbol for 15 s ...
-YEAR_SHOW_S = 5             # ... then the year dose for 5 s
-YEAR_SAVE_S = 600           # save every 10 min (and when stopping / switching off)
 RING_FAIR_PCT = 50
 RING_WARN_PCT = 80
 BACKGROUND_USV = 0.15
@@ -182,7 +174,6 @@ GEIGER_FREQ_HZ = 3000
 # Tables: (CPS, value), logarithmic in between. RC-102: ~30 CPS per µSv/h (Cs-137)
 # -> DANGER 10 µSv/h ≈ 300 CPS, end of the range 1000 µSv/h ≈ 30 000 CPS.
 CLICK_ON = False            # default before the first switch
-CLICK_CHUNK_MS = 500        # clicks are built in chunks of this length (reacts this fast)
 CLICK_LIVE_CPS = 50         # search range: clicks 1:1 with the CPS up to here
 CLICK_RATE_TABLE = ((50, 50), (300, 70), (30000, 100))          # clicks/s above
 CLICK_VOL_TABLE = ((3, 50), (50, 58), (300, 68), (30000, 80))   # volume % (max. 80)

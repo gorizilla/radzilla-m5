@@ -39,6 +39,9 @@ class FX:
         self.last_vib = None
         self.geiger_clicks = []
         self._ev = asyncio.Event()  # set when an effect starts (idle task sleeps until then)
+        self._vcur = None           # effect the virtual clock belongs to
+        self._vel = 0               # virtual elapsed ms of LED-only effects
+        self._vlast = 0
         if cfg.FX_PRELOAD:
             for n in ("siren_dose.wav", "siren_danger.wav"):
                 self._load(n)
@@ -206,7 +209,18 @@ class FX:
             if cur is None:
                 continue
             prio, t0, frame, length = cur
-            el = time.ticks_diff(time.ticks_ms(), t0)
+            now = time.ticks_ms()
+            if prio in (P_HEART, P_HIGH):
+                # LED runs without a sound to follow: if the program was held
+                # up (e.g. a page redraw), continue where the run stopped
+                # instead of skipping steps - a run is never lost.
+                if cur is not self._vcur:
+                    self._vcur, self._vel, self._vlast = cur, 0, now
+                self._vel += min(time.ticks_diff(now, self._vlast), 40)
+                self._vlast = now
+                el = self._vel
+            else:                               # sirens / Geiger: follow the sound
+                el = time.ticks_diff(now, t0)
             if el >= length:
                 self.cur = None
                 self._output([OFF] * N_LED, 0)

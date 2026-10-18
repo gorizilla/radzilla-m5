@@ -4,8 +4,7 @@
 # Copyright (c) 2026 Shimizilla – license: see LICENSE.md
 #
 # The RadiaCode sends the count rate once per second (no single pulses), so
-# the clicks are generated here: every CLICK_CHUNK_MS a WAV of that length
-# (16 kHz, 8 bit) with
+# the clicks are generated here: every second a 1 s WAV (16 kHz, 8 bit) with
 # randomly spaced clicks (like a real counter) is built in RAM and played in
 # the background.
 #   search range up to CLICK_LIVE_CPS: clicks 1:1 with the CPS, soft tick,
@@ -22,12 +21,13 @@ import struct
 import time
 
 RATE = 16000                # samples per second (8-bit mono)
+N = RATE                    # 1 s
 
 
-def _header(n):
-    return (b"RIFF" + struct.pack("<I", 36 + n) + b"WAVEfmt " +
+def _header():
+    return (b"RIFF" + struct.pack("<I", 36 + N) + b"WAVEfmt " +
             struct.pack("<IHHIIHH", 16, 1, 1, RATE, RATE, 1, 8) +
-            b"data" + struct.pack("<I", n))
+            b"data" + struct.pack("<I", N))
 
 
 def table(x, pts):
@@ -86,10 +86,8 @@ class Clicker:
     def __init__(self, dev, cfg):
         self.dev = dev
         self.c = cfg
-        self.ms = cfg.CLICK_CHUNK_MS
-        self.n = RATE * self.ms // 1000           # samples per chunk
-        h = _header(self.n)
-        self.silence = b"\x80" * self.n
+        h = _header()
+        self.silence = b"\x80" * N
         self.buf = [bytearray(h + self.silence), bytearray(h + self.silence)]
         self.cur = 0
         self.playing = False
@@ -99,7 +97,7 @@ class Clicker:
         mv[44:] = self.silence
         if rate <= 0:
             return 0
-        n, t, L, N = 0, 0.0, len(click), self.n
+        n, t, L = 0, 0.0, len(click)
         while True:
             t += -math.log(1.0 - random.random()) / rate
             pos = int(t * RATE)
@@ -113,7 +111,7 @@ class Clicker:
         c = self.c
         nxt = time.ticks_ms()
         while True:
-            nxt = time.ticks_add(nxt, self.ms)
+            nxt = time.ticks_add(nxt, 1000)
             d = time.ticks_diff(nxt, time.ticks_ms())
             if d < 0:                               # fell behind: restart timing
                 nxt, d = time.ticks_ms(), 0
